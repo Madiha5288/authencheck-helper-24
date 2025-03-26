@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { AttendanceRecord } from '../utils/types';
-import { ChevronLeft, ChevronRight, Search, FileDown, UserCheck } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, FileDown, UserCheck, Fingerprint } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface AttendanceListProps {
