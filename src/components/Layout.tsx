@@ -58,10 +58,12 @@ const Layout = ({ children, authState, setAuthState }: LayoutProps) => {
       <header className="w-full glass-morphism backdrop-blur-md sticky top-0 z-50 border-b">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <div className="flex items-center justify-center h-10 w-10 rounded-md bg-primary text-primary-foreground">
-              <UserCheck size={20} />
-            </div>
-            <span className="font-semibold text-xl">AttendAI</span>
+            <Link to="/dashboard" className="flex items-center justify-center">
+              <div className="flex items-center justify-center h-10 w-10 rounded-md bg-primary text-primary-foreground">
+                <UserCheck size={20} />
+              </div>
+              <span className="font-semibold text-xl ml-2">AttendAI</span>
+            </Link>
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
