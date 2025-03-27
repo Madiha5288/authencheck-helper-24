@@ -1,9 +1,12 @@
 
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import AuthForm from '../components/AuthForm';
-import { AuthState } from '../utils/types';
+import { AuthState, User } from '../utils/types';
 import { motion } from 'framer-motion';
 import { UserCheck } from 'lucide-react';
+import VerificationModal from '../components/VerificationModal';
+import { toast } from 'sonner';
 
 interface RegisterProps {
   authState: AuthState;
@@ -11,13 +14,64 @@ interface RegisterProps {
 }
 
 const Register = ({ authState, setAuthState }: RegisterProps) => {
-  const handleRegisterSuccess = (userData: any) => {
-    setAuthState({
-      isAuthenticated: true,
-      user: userData,
-      loading: false,
-      error: null,
-    });
+  const navigate = useNavigate();
+  const [registeredUser, setRegisteredUser] = useState<User | null>(null);
+  const [showVerification, setShowVerification] = useState<'face' | 'fingerprint' | null>(null);
+  const [biometricState, setBiometricState] = useState({
+    faceRegistered: false,
+    fingerprintRegistered: false
+  });
+
+  const handleRegisterSuccess = (userData: User) => {
+    setRegisteredUser(userData);
+    // Show face registration first
+    setShowVerification('face');
+    toast.success('Account created! Please register your biometrics to continue');
+  };
+
+  const handleFaceVerificationSuccess = () => {
+    setShowVerification(null);
+    setBiometricState(prev => ({ ...prev, faceRegistered: true }));
+    
+    // After face verification, show fingerprint registration
+    setTimeout(() => {
+      setShowVerification('fingerprint');
+    }, 500);
+  };
+
+  const handleFingerprintVerificationSuccess = () => {
+    setShowVerification(null);
+    setBiometricState(prev => ({ ...prev, fingerprintRegistered: true }));
+    
+    // After both biometrics are registered, complete the registration
+    if (registeredUser) {
+      const updatedUser = {
+        ...registeredUser,
+        hasFaceRegistered: true,
+        hasFingerprint: true
+      };
+      
+      setAuthState({
+        isAuthenticated: true,
+        user: updatedUser,
+        loading: false,
+        error: null
+      });
+      
+      toast.success('Registration complete! You are now logged in');
+      navigate('/dashboard');
+    }
+  };
+
+  const handleVerificationCancel = () => {
+    setShowVerification(null);
+    if (!biometricState.faceRegistered) {
+      toast.error('Face ID registration is required to continue');
+      setTimeout(() => setShowVerification('face'), 1000);
+    } else if (!biometricState.fingerprintRegistered) {
+      toast.error('Fingerprint registration is required to continue');
+      setTimeout(() => setShowVerification('fingerprint'), 1000);
+    }
   };
 
   return (
@@ -81,10 +135,22 @@ const Register = ({ authState, setAuthState }: RegisterProps) => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.3 }}
           >
-            <p>Registration is currently disabled in this demo. Please use the provided login credentials.</p>
+            <p>To complete registration, you'll need to register both Face ID and Fingerprint.</p>
           </motion.div>
         </div>
       </div>
+      
+      {/* Biometric verification modals */}
+      {showVerification && registeredUser && (
+        <VerificationModal 
+          user={registeredUser}
+          type={showVerification}
+          isRegister={true}
+          required={true}
+          onSuccess={showVerification === 'face' ? handleFaceVerificationSuccess : handleFingerprintVerificationSuccess}
+          onCancel={handleVerificationCancel}
+        />
+      )}
     </div>
   );
 };

@@ -11,6 +11,7 @@ interface VerificationModalProps {
   isRegister?: boolean;
   onSuccess: () => void;
   onCancel: () => void;
+  required?: boolean;
 }
 
 const VerificationModal = ({
@@ -19,6 +20,7 @@ const VerificationModal = ({
   isRegister = false,
   onSuccess,
   onCancel,
+  required = false,
 }: VerificationModalProps) => {
   const [status, setStatus] = useState<VerificationMethod["status"]>(
     isRegister ? "not-registered" : "registered"
@@ -131,6 +133,7 @@ const VerificationModal = ({
               {status === "failure" && (
                 <p className="text-sm text-destructive">
                   {isRegister ? "Registration" : "Verification"} failed!
+                  {required && " This is required to continue."}
                 </p>
               )}
             </div>
@@ -141,7 +144,7 @@ const VerificationModal = ({
             onClick={onCancel}
             className="flex-1 px-4 py-2 text-sm font-medium rounded-md border hover:bg-accent"
           >
-            Cancel
+            {required ? "Try Later" : "Cancel"}
           </button>
           {status === "failure" && (
             <button

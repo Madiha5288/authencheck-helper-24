@@ -64,6 +64,11 @@ export const loadAuthFromStorage = (): AuthState => {
   return initialAuthState;
 };
 
+// Check if required biometrics are registered
+export const areBiometricsRegistered = (user: User): boolean => {
+  return user.hasFaceRegistered && user.hasFingerprint;
+};
+
 // Simulated verification process
 export const verifyBiometric = (
   type: 'face' | 'fingerprint',
@@ -94,10 +99,35 @@ export const registerBiometric = (
         } else {
           user.hasFingerprint = true;
         }
+        
+        // Update the stored user if this is the current user
+        const storedUserJson = localStorage.getItem('authUser');
+        if (storedUserJson) {
+          try {
+            const storedUser = JSON.parse(storedUserJson) as User;
+            if (storedUser.id === userId) {
+              if (type === 'face') {
+                storedUser.hasFaceRegistered = true;
+              } else {
+                storedUser.hasFingerprint = true;
+              }
+              localStorage.setItem('authUser', JSON.stringify(storedUser));
+            }
+          } catch (error) {
+            console.error('Error updating stored user:', error);
+          }
+        }
+        
         resolve(true);
       } else {
         resolve(false);
       }
     }, 3000); // Takes time to "register"
   });
+};
+
+// Check if a user can log in based on biometric status
+export const canUserLogIn = (user: User): boolean => {
+  // User must have both face and fingerprint registered
+  return user.hasFaceRegistered && user.hasFingerprint;
 };

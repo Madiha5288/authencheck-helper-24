@@ -1,9 +1,9 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LoginCredentials } from '../utils/types';
-import { authenticateUser, saveAuthToStorage } from '../utils/auth';
-import { Eye, EyeOff } from 'lucide-react';
+import { LoginCredentials, User } from '../utils/types';
+import { authenticateUser, saveAuthToStorage, canUserLogIn } from '../utils/auth';
+import { Eye, EyeOff, UserCheck, Fingerprint } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AuthFormProps {
@@ -44,6 +44,14 @@ const AuthForm = ({ type, onSuccess }: AuthFormProps) => {
 
     try {
       const userData = await authenticateUser(formData);
+      
+      // Check if user has registered both biometrics
+      if (!canUserLogIn(userData)) {
+        toast.error('You must register both Face ID and Fingerprint to log in');
+        setIsLoading(false);
+        return;
+      }
+      
       saveAuthToStorage(userData);
       onSuccess(userData);
       toast.success('Login successful!');
@@ -67,9 +75,25 @@ const AuthForm = ({ type, onSuccess }: AuthFormProps) => {
       return;
     }
 
-    // Simulate registration - in a real app, this would call an API
+    // Simulate registration - create a mock user
     setTimeout(() => {
-      toast.error('Registration is currently disabled in this demo. Please use the provided login credentials.');
+      // Create a new user
+      const newUser: User = {
+        id: `user-${Date.now()}`, // Generate a unique ID
+        name: registerData.name,
+        email: registerData.email,
+        password: registerData.password,
+        role: 'user', // Default role
+        department: registerData.department,
+        position: 'Employee', // Default position
+        registeredOn: new Date(),
+        lastLogin: new Date(),
+        profileImage: '/placeholder.svg',
+        hasFaceRegistered: false, // Will be registered in the next step
+        hasFingerprint: false, // Will be registered in the next step
+      };
+      
+      onSuccess(newUser);
       setIsLoading(false);
     }, 1000);
   };
@@ -116,6 +140,19 @@ const AuthForm = ({ type, onSuccess }: AuthFormProps) => {
             </button>
           </div>
         </div>
+        
+        {/* Login notice about biometrics */}
+        <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md">
+          <div className="flex items-center space-x-2 mb-2">
+            <UserCheck size={16} className="text-primary" />
+            <span className="font-medium">Face ID verification required</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Fingerprint size={16} className="text-primary" />
+            <span className="font-medium">Fingerprint verification required</span>
+          </div>
+        </div>
+        
         <button
           type="submit"
           disabled={isLoading}
@@ -219,6 +256,20 @@ const AuthForm = ({ type, onSuccess }: AuthFormProps) => {
           placeholder="••••••••"
         />
       </div>
+      
+      {/* Biometric notice */}
+      <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md">
+        <p className="mb-2 font-medium">After registration, you'll need to set up:</p>
+        <div className="flex items-center space-x-2 mb-1">
+          <UserCheck size={16} className="text-primary" />
+          <span>Face ID for verification</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Fingerprint size={16} className="text-primary" />
+          <span>Fingerprint for verification</span>
+        </div>
+      </div>
+      
       <button
         type="submit"
         disabled={isLoading}
@@ -226,7 +277,7 @@ const AuthForm = ({ type, onSuccess }: AuthFormProps) => {
           isLoading ? 'opacity-70 cursor-not-allowed' : ''
         }`}
       >
-        {isLoading ? 'Registering...' : 'Register'}
+        {isLoading ? 'Registering...' : 'Register & Set Up Biometrics'}
       </button>
     </form>
   );
