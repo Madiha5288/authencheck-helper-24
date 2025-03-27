@@ -69,7 +69,7 @@ export const areBiometricsRegistered = (user: User): boolean => {
   return user.hasFaceRegistered && user.hasFingerprint;
 };
 
-// Simulated verification process
+// Simulated verification process with increased success rate
 export const verifyBiometric = (
   type: 'face' | 'fingerprint',
   userId: string
@@ -77,52 +77,60 @@ export const verifyBiometric = (
   return new Promise((resolve) => {
     // Simulate verification process
     setTimeout(() => {
-      // 90% success rate for simulation purposes
-      const success = Math.random() < 0.9;
+      // 95% success rate for simulation purposes
+      const success = Math.random() < 0.95;
+      console.log(`${type} verification ${success ? 'succeeded' : 'failed'} for user ${userId}`);
       resolve(success);
-    }, 2500); // Takes time to "scan"
+    }, 2000); // Slightly faster "scan"
   });
 };
 
-// Register new biometric
+// Register new biometric with high success rate
 export const registerBiometric = (
   type: 'face' | 'fingerprint',
   userId: string
 ): Promise<boolean> => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      // Find user and update their biometric status
-      const user = users.find(u => u.id === userId);
-      if (user) {
-        if (type === 'face') {
-          user.hasFaceRegistered = true;
-        } else {
-          user.hasFingerprint = true;
-        }
-        
-        // Update the stored user if this is the current user
-        const storedUserJson = localStorage.getItem('authUser');
-        if (storedUserJson) {
-          try {
-            const storedUser = JSON.parse(storedUserJson) as User;
-            if (storedUser.id === userId) {
-              if (type === 'face') {
-                storedUser.hasFaceRegistered = true;
-              } else {
-                storedUser.hasFingerprint = true;
+      // Almost always succeed for registration (98%)
+      const success = Math.random() < 0.98;
+      
+      if (success) {
+        // Find user and update their biometric status
+        const user = users.find(u => u.id === userId);
+        if (user) {
+          if (type === 'face') {
+            user.hasFaceRegistered = true;
+          } else {
+            user.hasFingerprint = true;
+          }
+          
+          // Update the stored user if this is the current user
+          const storedUserJson = localStorage.getItem('authUser');
+          if (storedUserJson) {
+            try {
+              const storedUser = JSON.parse(storedUserJson) as User;
+              if (storedUser.id === userId) {
+                if (type === 'face') {
+                  storedUser.hasFaceRegistered = true;
+                } else {
+                  storedUser.hasFingerprint = true;
+                }
+                localStorage.setItem('authUser', JSON.stringify(storedUser));
               }
-              localStorage.setItem('authUser', JSON.stringify(storedUser));
+            } catch (error) {
+              console.error('Error updating stored user:', error);
             }
-          } catch (error) {
-            console.error('Error updating stored user:', error);
           }
         }
         
+        console.log(`${type} registration successful for user ${userId}`);
         resolve(true);
       } else {
+        console.log(`${type} registration failed for user ${userId}`);
         resolve(false);
       }
-    }, 3000); // Takes time to "register"
+    }, 2500);
   });
 };
 

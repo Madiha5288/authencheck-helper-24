@@ -21,6 +21,10 @@ const Register = ({ authState, setAuthState }: RegisterProps) => {
     faceRegistered: false,
     fingerprintRegistered: false
   });
+  const [verificationAttempts, setVerificationAttempts] = useState({
+    face: 0,
+    fingerprint: 0
+  });
 
   const handleRegisterSuccess = (userData: User) => {
     setRegisteredUser(userData);
@@ -65,11 +69,38 @@ const Register = ({ authState, setAuthState }: RegisterProps) => {
 
   const handleVerificationCancel = () => {
     setShowVerification(null);
+    
     if (!biometricState.faceRegistered) {
       toast.error('Face ID registration is required to continue');
+      // Increment attempt counter for face
+      setVerificationAttempts(prev => ({
+        ...prev,
+        face: prev.face + 1
+      }));
+      
+      // If they've tried 3 times and failed, offer alternative
+      if (verificationAttempts.face >= 2) {
+        toast('Try moving to a well-lit area and ensure your face is clearly visible', {
+          duration: 5000,
+        });
+      }
+      
       setTimeout(() => setShowVerification('face'), 1000);
     } else if (!biometricState.fingerprintRegistered) {
       toast.error('Fingerprint registration is required to continue');
+      // Increment attempt counter for fingerprint
+      setVerificationAttempts(prev => ({
+        ...prev,
+        fingerprint: prev.fingerprint + 1
+      }));
+      
+      // If they've tried 3 times and failed, offer alternative
+      if (verificationAttempts.fingerprint >= 2) {
+        toast('Make sure your fingerprint sensor is clean and try again', {
+          duration: 5000,
+        });
+      }
+      
       setTimeout(() => setShowVerification('fingerprint'), 1000);
     }
   };
@@ -138,12 +169,12 @@ const Register = ({ authState, setAuthState }: RegisterProps) => {
             <p className="text-sm text-muted-foreground mb-2">To complete registration, you'll need to set up:</p>
             <div className="flex items-center justify-center space-x-6">
               <div className="flex items-center">
-                <Camera size={16} className="text-primary mr-2" />
-                <span className="text-xs">Face ID</span>
+                <Camera size={16} className={`mr-2 ${biometricState.faceRegistered ? 'text-green-500' : 'text-primary'}`} />
+                <span className="text-xs">Face ID {biometricState.faceRegistered && '✓'}</span>
               </div>
               <div className="flex items-center">
-                <Fingerprint size={16} className="text-primary mr-2" />
-                <span className="text-xs">Fingerprint</span>
+                <Fingerprint size={16} className={`mr-2 ${biometricState.fingerprintRegistered ? 'text-green-500' : 'text-primary'}`} />
+                <span className="text-xs">Fingerprint {biometricState.fingerprintRegistered && '✓'}</span>
               </div>
             </div>
           </motion.div>

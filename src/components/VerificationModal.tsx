@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import { User, VerificationMethod } from "../utils/types";
 import { verifyBiometric, registerBiometric } from "../utils/auth";
-import { Check, X, Fingerprint, UserCheck, Camera } from "lucide-react";
+import { Check, X, Fingerprint, Camera } from "lucide-react";
 import { toast } from "sonner";
 
 interface VerificationModalProps {
@@ -27,14 +27,20 @@ const VerificationModal = ({
   );
   const [accessRequested, setAccessRequested] = useState(false);
   const [accessGranted, setAccessGranted] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Request camera access for face verification
   const requestCameraAccess = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: true,
+        video: {
+          width: { ideal: 320 },
+          height: { ideal: 240 },
+          facingMode: "user"
+        },
         audio: false
       });
       
@@ -79,11 +85,30 @@ const VerificationModal = ({
     }
   };
 
+  const captureFaceImage = () => {
+    if (canvasRef.current && videoRef.current) {
+      const context = canvasRef.current.getContext('2d');
+      if (context) {
+        canvasRef.current.width = videoRef.current.videoWidth;
+        canvasRef.current.height = videoRef.current.videoHeight;
+        context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
+        // In a real app, you would send this image to your server for face recognition
+        return true;
+      }
+    }
+    return false;
+  };
+
   const startVerification = async () => {
     setStatus("in-progress");
     
     try {
-      // Simulate biometric verification
+      // For face verification, attempt to capture an image first
+      if (type === "face" && !captureFaceImage()) {
+        throw new Error("Failed to capture face image");
+      }
+      
+      // Simulate biometric verification with the backend
       const result = isRegister 
         ? await registerBiometric(type, user.id)
         : await verifyBiometric(type, user.id);
@@ -104,8 +129,9 @@ const VerificationModal = ({
         toast.error(`${type === "face" ? "Facial" : "Fingerprint"} verification failed`);
       }
     } catch (error) {
+      console.error("Verification error:", error);
       setStatus("failure");
-      toast.error(`${type === "face" ? "Facial" : "Fingerprint"} verification failed`);
+      toast.error(`${type === "face" ? "Facial" : "Fingerprint"} verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -126,7 +152,7 @@ const VerificationModal = ({
           // After a short delay to show the camera feed, start the verification
           setTimeout(() => {
             startVerification();
-          }, 1000);
+          }, 1500);
         } else {
           // If access denied, allow retry
           setStatus("failure");
@@ -170,6 +196,12 @@ const VerificationModal = ({
                     autoPlay 
                     muted 
                     playsInline
+                  />
+                  
+                  {/* Hidden canvas used for capturing image */}
+                  <canvas 
+                    ref={canvasRef} 
+                    className="hidden" 
                   />
                   
                   {status === "in-progress" && (
@@ -258,7 +290,9 @@ const VerificationModal = ({
           {status === "failure" && (
             <button
               onClick={() => {
+                setRetryCount(retryCount + 1);
                 setAccessRequested(false);
+                setAccessGranted(false);
                 setStatus(isRegister ? "not-registered" : "registered");
               }}
               className="flex-1 ml-3 px-4 py-2 text-sm font-medium bg-primary text-white rounded-md hover:bg-primary/90"
