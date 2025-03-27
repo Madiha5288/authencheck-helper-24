@@ -44,6 +44,15 @@ const Layout = ({ children, authState, setAuthState }: LayoutProps) => {
     return <>{children}</>;
   }
 
+  // Check if current path matches route
+  const isActive = (path: string) => {
+    if (path === '/dashboard' && location.pathname === '/dashboard') {
+      return true;
+    }
+    // For other routes, check if the path is in the location pathname
+    return path !== '/dashboard' && location.pathname.includes(path.substring(1));
+  };
+
   const menuItems = [
     { name: 'Dashboard', icon: BarChart2, path: '/dashboard' },
     { name: 'Attendance', icon: UserCheck, path: '/attendance' },
@@ -115,7 +124,7 @@ const Layout = ({ children, authState, setAuthState }: LayoutProps) => {
                   key={item.path}
                   to={item.path}
                   className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
-                    location.pathname === item.path
+                    isActive(item.path)
                       ? 'bg-primary text-primary-foreground'
                       : 'hover:bg-accent'
                   }`}
@@ -166,7 +175,7 @@ const Layout = ({ children, authState, setAuthState }: LayoutProps) => {
                       key={item.path}
                       to={item.path}
                       className={`flex items-center px-4 py-3 rounded-lg ${
-                        location.pathname === item.path
+                        isActive(item.path)
                           ? 'bg-primary text-primary-foreground'
                           : 'hover:bg-accent'
                       }`}

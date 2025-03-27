@@ -1,5 +1,6 @@
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Dashboard from '../components/Dashboard';
 import AttendanceList from '../components/AttendanceList';
@@ -12,7 +13,18 @@ interface DashboardPageProps {
 }
 
 const DashboardPage = ({ authState, setAuthState }: DashboardPageProps) => {
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('dashboard');
+  
+  // Update active tab based on the current route
+  useEffect(() => {
+    const path = location.pathname.split('/')[1];
+    if (path) {
+      setActiveTab(path);
+    } else {
+      setActiveTab('dashboard');
+    }
+  }, [location.pathname]);
   
   if (!authState.user) return null;
   
