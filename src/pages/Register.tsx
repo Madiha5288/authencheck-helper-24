@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthForm from '../components/AuthForm';
 import { AuthState, User } from '../utils/types';
 import { motion } from 'framer-motion';
-import { UserCheck } from 'lucide-react';
+import { UserCheck, Camera, Fingerprint } from 'lucide-react';
 import VerificationModal from '../components/VerificationModal';
 import { toast } from 'sonner';
 
@@ -26,7 +26,7 @@ const Register = ({ authState, setAuthState }: RegisterProps) => {
     setRegisteredUser(userData);
     // Show face registration first
     setShowVerification('face');
-    toast.success('Account created! Please register your biometrics to continue');
+    toast.success('Account created! Please set up your biometrics to continue');
   };
 
   const handleFaceVerificationSuccess = () => {
@@ -130,12 +130,22 @@ const Register = ({ authState, setAuthState }: RegisterProps) => {
           </div>
 
           <motion.div 
-            className="px-8 py-4 bg-muted/30 border-t text-center text-xs text-muted-foreground"
+            className="px-8 py-4 bg-muted/30 border-t text-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.3 }}
           >
-            <p>To complete registration, you'll need to register both Face ID and Fingerprint.</p>
+            <p className="text-sm text-muted-foreground mb-2">To complete registration, you'll need to set up:</p>
+            <div className="flex items-center justify-center space-x-6">
+              <div className="flex items-center">
+                <Camera size={16} className="text-primary mr-2" />
+                <span className="text-xs">Face ID</span>
+              </div>
+              <div className="flex items-center">
+                <Fingerprint size={16} className="text-primary mr-2" />
+                <span className="text-xs">Fingerprint</span>
+              </div>
+            </div>
           </motion.div>
         </div>
       </div>

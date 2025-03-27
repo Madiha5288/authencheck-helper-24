@@ -1,8 +1,8 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { User, VerificationMethod } from "../utils/types";
 import { verifyBiometric, registerBiometric } from "../utils/auth";
-import { Check, X, Fingerprint, UserCheck } from "lucide-react";
+import { Check, X, Fingerprint, UserCheck, Camera } from "lucide-react";
 import { toast } from "sonner";
 
 interface VerificationModalProps {
@@ -25,11 +25,65 @@ const VerificationModal = ({
   const [status, setStatus] = useState<VerificationMethod["status"]>(
     isRegister ? "not-registered" : "registered"
   );
+  const [accessRequested, setAccessRequested] = useState(false);
+  const [accessGranted, setAccessGranted] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+
+  // Request camera access for face verification
+  const requestCameraAccess = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: true,
+        audio: false
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        mediaStreamRef.current = stream;
+      }
+      
+      setAccessGranted(true);
+      toast.success("Camera access granted");
+      return true;
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      toast.error("Camera access denied. Please allow camera access to continue.");
+      return false;
+    }
+  };
+
+  // Request fingerprint access
+  const requestFingerprintAccess = async () => {
+    if (!window.PublicKeyCredential) {
+      toast.error("Fingerprint API not supported in this browser");
+      return false;
+    }
+    
+    try {
+      // Check if user verifying platform authenticator is available
+      const result = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      
+      if (result) {
+        toast.success("Fingerprint sensor detected");
+        setAccessGranted(true);
+        return true;
+      } else {
+        toast.error("No fingerprint sensor detected on this device");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error accessing fingerprint sensor:", error);
+      toast.error("Failed to access fingerprint sensor");
+      return false;
+    }
+  };
 
   const startVerification = async () => {
     setStatus("in-progress");
     
     try {
+      // Simulate biometric verification
       const result = isRegister 
         ? await registerBiometric(type, user.id)
         : await verifyBiometric(type, user.id);
@@ -39,6 +93,11 @@ const VerificationModal = ({
         setTimeout(() => {
           onSuccess();
           toast.success(`${type === "face" ? "Facial" : "Fingerprint"} verification successful`);
+          
+          // Clean up camera resources if used
+          if (type === "face" && mediaStreamRef.current) {
+            mediaStreamRef.current.getTracks().forEach(track => track.stop());
+          }
         }, 1000);
       } else {
         setStatus("failure");
@@ -51,13 +110,41 @@ const VerificationModal = ({
   };
 
   useEffect(() => {
+    // Request access to the appropriate sensor
+    const requestAccess = async () => {
+      if (!accessRequested) {
+        setAccessRequested(true);
+        
+        let accessSuccess = false;
+        if (type === "face") {
+          accessSuccess = await requestCameraAccess();
+        } else {
+          accessSuccess = await requestFingerprintAccess();
+        }
+        
+        if (accessSuccess) {
+          // After a short delay to show the camera feed, start the verification
+          setTimeout(() => {
+            startVerification();
+          }, 1000);
+        } else {
+          // If access denied, allow retry
+          setStatus("failure");
+        }
+      }
+    };
+    
     if (status === "registered" || status === "not-registered") {
-      const timer = setTimeout(() => {
-        startVerification();
-      }, 500);
-      return () => clearTimeout(timer);
+      requestAccess();
     }
-  }, [status]);
+    
+    // Clean up
+    return () => {
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [status, type, accessRequested]);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
@@ -69,13 +156,22 @@ const VerificationModal = ({
             </h3>
             <p className="text-muted-foreground text-center mb-6">
               {isRegister
-                ? `Please stand still while we register your ${type === "face" ? "face" : "fingerprint"}.`
+                ? `Please ${type === "face" ? "allow camera access" : "place your finger on the sensor"} to register your ${type === "face" ? "face" : "fingerprint"}.`
                 : `Please ${type === "face" ? "look at the camera" : "place your finger on the scanner"} for verification.`}
             </p>
 
             <div className="w-48 h-48 mb-6 relative">
               {type === "face" ? (
                 <div className="w-full h-full rounded-lg overflow-hidden border-2 border-primary relative face-recognition-grid">
+                  {/* Camera feed for face recognition */}
+                  <video 
+                    ref={videoRef}
+                    className="w-full h-full object-cover"
+                    autoPlay 
+                    muted 
+                    playsInline
+                  />
+                  
                   {status === "in-progress" && (
                     <div className="absolute top-0 left-0 right-0 h-1 bg-primary/80 scanner-line animate-scanning"></div>
                   )}
@@ -89,9 +185,9 @@ const VerificationModal = ({
                       <X className="h-16 w-16 text-destructive" />
                     </div>
                   )}
-                  {status !== "failure" && status !== "success" && (
+                  {!accessGranted && status !== "failure" && status !== "success" && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <UserCheck className="h-16 w-16 text-primary/50 animate-pulse-light" />
+                      <Camera className="h-16 w-16 text-primary/50 animate-pulse-light" />
                     </div>
                   )}
                 </div>
@@ -120,7 +216,12 @@ const VerificationModal = ({
             </div>
 
             <div className="text-center">
-              {status === "in-progress" && (
+              {!accessGranted && status !== "failure" && (
+                <p className="text-sm">
+                  Requesting {type === "face" ? "camera" : "fingerprint sensor"} access...
+                </p>
+              )}
+              {accessGranted && status === "in-progress" && (
                 <p className="text-sm">
                   {isRegister ? "Registering" : "Verifying"}...
                 </p>
@@ -132,7 +233,9 @@ const VerificationModal = ({
               )}
               {status === "failure" && (
                 <p className="text-sm text-destructive">
-                  {isRegister ? "Registration" : "Verification"} failed!
+                  {!accessGranted 
+                    ? `${type === "face" ? "Camera" : "Fingerprint sensor"} access denied` 
+                    : `${isRegister ? "Registration" : "Verification"} failed!`}
                   {required && " This is required to continue."}
                 </p>
               )}
@@ -141,14 +244,23 @@ const VerificationModal = ({
         </div>
         <div className="flex border-t p-4">
           <button
-            onClick={onCancel}
+            onClick={() => {
+              // Stop media tracks if any
+              if (mediaStreamRef.current) {
+                mediaStreamRef.current.getTracks().forEach(track => track.stop());
+              }
+              onCancel();
+            }}
             className="flex-1 px-4 py-2 text-sm font-medium rounded-md border hover:bg-accent"
           >
             {required ? "Try Later" : "Cancel"}
           </button>
           {status === "failure" && (
             <button
-              onClick={startVerification}
+              onClick={() => {
+                setAccessRequested(false);
+                setStatus(isRegister ? "not-registered" : "registered");
+              }}
               className="flex-1 ml-3 px-4 py-2 text-sm font-medium bg-primary text-white rounded-md hover:bg-primary/90"
             >
               Retry
