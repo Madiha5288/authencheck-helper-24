@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Dashboard from '../components/Dashboard';
 import AttendanceList from '../components/AttendanceList';
+import Settings from '../components/Settings';
 import { attendanceRecords } from '../utils/mockData';
 import { registeredUsers } from '../utils/auth';
 import { AuthState } from '../utils/types';
@@ -123,14 +124,7 @@ const DashboardPage = ({ authState, setAuthState }: DashboardPageProps) => {
       )}
       
       {activeTab === 'settings' && (
-        <div className="space-y-6">
-          <h1 className="text-2xl font-bold">Settings</h1>
-          <div className="bg-white rounded-lg shadow border p-6 text-center">
-            <p className="text-muted-foreground">
-              This feature will be implemented in a future update.
-            </p>
-          </div>
-        </div>
+        <Settings authState={authState} setAuthState={setAuthState} />
       )}
     </Layout>
   );
