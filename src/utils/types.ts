@@ -12,6 +12,7 @@ export interface User {
   profileImage: string;
   hasFaceRegistered: boolean;
   hasFingerprint: boolean;
+  schedule?: WeeklySchedule;
 }
 
 export interface AttendanceRecord {
@@ -23,6 +24,22 @@ export interface AttendanceRecord {
   checkOutTime: Date;
   verificationMethod: 'face' | 'fingerprint';
   status: 'on-time' | 'late' | 'absent';
+}
+
+export interface WorkDay {
+  enabled: boolean;
+  startTime: string;
+  endTime: string;
+}
+
+export interface WeeklySchedule {
+  monday: WorkDay;
+  tuesday: WorkDay;
+  wednesday: WorkDay;
+  thursday: WorkDay;
+  friday: WorkDay;
+  saturday: WorkDay;
+  sunday: WorkDay;
 }
 
 export interface LoginCredentials {

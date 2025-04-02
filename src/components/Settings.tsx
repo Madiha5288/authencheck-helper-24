@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { Switch } from "@/components/ui/switch";
@@ -7,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AuthState, User } from '../utils/types';
+import ScheduleManager from './ScheduleManager';
 
 interface SettingsProps {
   authState: AuthState;
@@ -40,7 +40,9 @@ const Settings = ({ authState, setAuthState }: SettingsProps) => {
       user: updatedUser,
     });
 
-    // In a real app, you would save this to an API
+    // Update localStorage
+    localStorage.setItem('authUser', JSON.stringify(updatedUser));
+
     toast({
       title: "Profile updated",
       description: "Your profile has been updated successfully.",
@@ -82,6 +84,7 @@ const Settings = ({ authState, setAuthState }: SettingsProps) => {
       <Tabs defaultValue="profile" className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="schedule">Schedule</TabsTrigger>
           <TabsTrigger value="preferences">Preferences</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
         </TabsList>
@@ -179,6 +182,17 @@ const Settings = ({ authState, setAuthState }: SettingsProps) => {
               </button>
             </div>
           </div>
+        </TabsContent>
+        
+        {/* Schedule Tab */}
+        <TabsContent value="schedule" className="space-y-6">
+          {authState.user && (
+            <ScheduleManager
+              user={authState.user}
+              authState={authState}
+              setAuthState={setAuthState}
+            />
+          )}
         </TabsContent>
         
         {/* Preferences Tab */}

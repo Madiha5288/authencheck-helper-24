@@ -7,7 +7,7 @@ import AttendanceList from '../components/AttendanceList';
 import Settings from '../components/Settings';
 import { attendanceRecords } from '../utils/mockData';
 import { registeredUsers } from '../utils/auth';
-import { AuthState } from '../utils/types';
+import { AuthState, User, WeeklySchedule } from '../utils/types';
 
 interface DashboardPageProps {
   authState: AuthState;
@@ -34,6 +34,26 @@ const DashboardPage = ({ authState, setAuthState }: DashboardPageProps) => {
   const filteredRecords = authState.user.role === 'admin'
     ? attendanceRecords
     : attendanceRecords.filter(record => record.userId === authState.user?.id);
+  
+  // Get current day of week
+  const getDayOfWeek = (): keyof WeeklySchedule | null => {
+    const days: (keyof WeeklySchedule)[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayIndex = new Date().getDay();
+    return days[dayIndex];
+  };
+
+  // Get today's schedule if available
+  const getTodaySchedule = () => {
+    if (!authState.user?.schedule) return null;
+    
+    const today = getDayOfWeek();
+    if (!today) return null;
+    
+    const daySchedule = authState.user.schedule[today];
+    return daySchedule.enabled ? daySchedule : null;
+  };
+  
+  const todaySchedule = getTodaySchedule();
   
   return (
     <Layout authState={authState} setAuthState={setAuthState}>
@@ -115,11 +135,59 @@ const DashboardPage = ({ authState, setAuthState }: DashboardPageProps) => {
       {activeTab === 'schedule' && (
         <div className="space-y-6">
           <h1 className="text-2xl font-bold">Work Schedule</h1>
-          <div className="bg-white rounded-lg shadow border p-6 text-center">
-            <p className="text-muted-foreground">
-              No schedule data yet. Schedules will appear here as they are created.
-            </p>
-          </div>
+          {authState.user?.schedule ? (
+            <div className="bg-white rounded-lg shadow border overflow-hidden">
+              <div className="p-4 border-b bg-muted/30">
+                <h2 className="font-semibold">Your Weekly Schedule</h2>
+              </div>
+              <div className="divide-y">
+                {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => {
+                  const daySchedule = authState.user?.schedule?.[day as keyof WeeklySchedule];
+                  const isCurrentDay = getDayOfWeek() === day;
+
+                  return (
+                    <div 
+                      key={day}
+                      className={`p-4 flex justify-between items-center ${isCurrentDay ? 'bg-primary/5' : ''}`}
+                    >
+                      <div className="flex items-center">
+                        <span className="capitalize font-medium">{day}</span>
+                        {isCurrentDay && (
+                          <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">Today</span>
+                        )}
+                      </div>
+                      <div>
+                        {daySchedule?.enabled ? (
+                          <span className="text-sm">
+                            {daySchedule.startTime} - {daySchedule.endTime}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Day Off</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="p-4 border-t">
+                <p className="text-sm text-muted-foreground">
+                  You can edit your schedule in the settings.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow border p-6 text-center">
+              <p className="text-muted-foreground mb-4">
+                You haven't set up your schedule yet.
+              </p>
+              <button
+                onClick={() => setActiveTab('settings')}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition"
+              >
+                Set Up Schedule
+              </button>
+            </div>
+          )}
         </div>
       )}
       

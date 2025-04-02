@@ -8,6 +8,7 @@ import UserCard from './UserCard';
 import Stats from './Stats';
 import VerificationModal from './VerificationModal';
 import { format } from 'date-fns';
+import { checkInUser } from '../utils/auth';
 
 interface DashboardProps {
   user: User;
@@ -61,6 +62,12 @@ const Dashboard = ({ user }: DashboardProps) => {
     setShowVerification(null);
     
     if (!isRegistering) {
+      // Record the user's attendance
+      const method = user.hasFaceRegistered && user.hasFingerprint 
+        ? (Math.random() > 0.5 ? 'face' : 'fingerprint')
+        : user.hasFaceRegistered ? 'face' : 'fingerprint';
+        
+      checkInUser(user.id, method);
       toast.success('Attendance recorded successfully');
     }
   };
