@@ -8,7 +8,7 @@ import { UserCheck, Camera, Fingerprint } from 'lucide-react';
 import VerificationModal from '../components/VerificationModal';
 import { toast } from 'sonner';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { registeredUsers } from '../utils/auth';
+import { addNewUser } from '../utils/auth';
 
 interface RegisterProps {
   authState: AuthState;
@@ -53,8 +53,8 @@ const Register = ({ authState, setAuthState }: RegisterProps) => {
         hasFingerprint: biometricChoice === 'fingerprint'
       };
       
-      // Add user to registered users list
-      registeredUsers.push(updatedUser);
+      // Add user to database using the new addNewUser function
+      addNewUser(updatedUser);
       
       setAuthState({
         isAuthenticated: true,

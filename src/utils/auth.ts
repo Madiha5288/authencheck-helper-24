@@ -15,9 +15,17 @@ export const authenticateUser = (credentials: LoginCredentials): Promise<User> =
   return new Promise((resolve, reject) => {
     // Simulate API call
     setTimeout(() => {
-      const user = users.find(
+      // First, check registered users in the main users array
+      let user = users.find(
         (u) => u.email === credentials.email && u.password === credentials.password
       );
+      
+      // If not found in main users array, check in registeredUsers array
+      if (!user && registeredUsers.length > 0) {
+        user = registeredUsers.find(
+          (u) => u.email === credentials.email && u.password === credentials.password
+        );
+      }
       
       if (user) {
         // Update last login
@@ -177,3 +185,14 @@ export const canUserLogIn = (user: User): boolean => {
 
 // Array to store newly registered users
 export const registeredUsers: User[] = [];
+
+// Function to add a newly registered user to both the registeredUsers array and the main users array
+export const addNewUser = (user: User): void => {
+  // Add to registered users array
+  registeredUsers.push(user);
+  
+  // Also add to main users array to ensure it's available for authentication
+  users.push(user);
+  
+  console.log(`User ${user.name} added to database`);
+}
