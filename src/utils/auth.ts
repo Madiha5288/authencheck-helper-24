@@ -66,7 +66,8 @@ export const loadAuthFromStorage = (): AuthState => {
 
 // Check if required biometrics are registered
 export const areBiometricsRegistered = (user: User): boolean => {
-  return user.hasFaceRegistered && user.hasFingerprint;
+  // At least one biometric method needs to be registered
+  return user.hasFaceRegistered || user.hasFingerprint;
 };
 
 // Simulated verification process with increased success rate
@@ -136,6 +137,9 @@ export const registerBiometric = (
 
 // Check if a user can log in based on biometric status
 export const canUserLogIn = (user: User): boolean => {
-  // User must have both face and fingerprint registered
-  return user.hasFaceRegistered && user.hasFingerprint;
+  // User must have at least one biometric method registered
+  return user.hasFaceRegistered || user.hasFingerprint;
 };
+
+// Empty initial users array - will be populated with newly registered users
+export const registeredUsers: User[] = [];

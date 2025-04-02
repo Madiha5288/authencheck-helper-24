@@ -45,9 +45,9 @@ const AuthForm = ({ type, onSuccess }: AuthFormProps) => {
     try {
       const userData = await authenticateUser(formData);
       
-      // Check if user has registered both biometrics
+      // Check if user has at least one biometric registered
       if (!canUserLogIn(userData)) {
-        toast.error('You must register both Face ID and Fingerprint to log in');
+        toast.error('You must register at least one biometric method to log in');
         setIsLoading(false);
         return;
       }
@@ -89,8 +89,8 @@ const AuthForm = ({ type, onSuccess }: AuthFormProps) => {
         registeredOn: new Date(),
         lastLogin: new Date(),
         profileImage: '/placeholder.svg',
-        hasFaceRegistered: false, // Will be registered in the next step
-        hasFingerprint: false, // Will be registered in the next step
+        hasFaceRegistered: false, // Will be set during biometric registration
+        hasFingerprint: false, // Will be set during biometric registration
       };
       
       onSuccess(newUser);
@@ -143,13 +143,14 @@ const AuthForm = ({ type, onSuccess }: AuthFormProps) => {
         
         {/* Login notice about biometrics */}
         <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md">
+          <p className="mb-2">To log in, you need at least one of:</p>
           <div className="flex items-center space-x-2 mb-2">
             <UserCheck size={16} className="text-primary" />
-            <span className="font-medium">Face ID verification required</span>
+            <span className="font-medium">Face ID verification</span>
           </div>
           <div className="flex items-center space-x-2">
             <Fingerprint size={16} className="text-primary" />
-            <span className="font-medium">Fingerprint verification required</span>
+            <span className="font-medium">Fingerprint verification</span>
           </div>
         </div>
         
@@ -257,16 +258,16 @@ const AuthForm = ({ type, onSuccess }: AuthFormProps) => {
         />
       </div>
       
-      {/* Biometric notice */}
+      {/* Simplified biometric notice */}
       <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md">
-        <p className="mb-2 font-medium">After registration, you'll need to set up:</p>
+        <p className="mb-2 font-medium">After registration, you'll choose one biometric method:</p>
         <div className="flex items-center space-x-2 mb-1">
           <UserCheck size={16} className="text-primary" />
-          <span>Face ID for verification</span>
+          <span>Face ID</span>
         </div>
         <div className="flex items-center space-x-2">
           <Fingerprint size={16} className="text-primary" />
-          <span>Fingerprint for verification</span>
+          <span>Fingerprint</span>
         </div>
       </div>
       
