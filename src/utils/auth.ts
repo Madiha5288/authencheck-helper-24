@@ -1,6 +1,6 @@
 
-import { User, LoginCredentials, AuthState } from './types';
-import { users } from './mockData';
+import { User, LoginCredentials, AuthState, AttendanceRecord } from './types';
+import { users, attendanceRecords } from './mockData';
 
 // Initial auth state
 export const initialAuthState: AuthState = {
@@ -10,7 +10,7 @@ export const initialAuthState: AuthState = {
   error: null,
 };
 
-// Check if user exists in mock data
+// Check if user exists in registered users
 export const authenticateUser = (credentials: LoginCredentials): Promise<User> => {
   return new Promise((resolve, reject) => {
     // Simulate API call
@@ -135,11 +135,45 @@ export const registerBiometric = (
   });
 };
 
+// Check in a user and create an attendance record
+export const checkInUser = (userId: string, verificationMethod: 'face' | 'fingerprint'): void => {
+  const user = users.find(u => u.id === userId);
+  if (!user) return;
+
+  const today = new Date();
+  const recordId = `${userId}-${today.toISOString().split('T')[0]}`;
+  
+  // Check if user already checked in today
+  const existingRecord = attendanceRecords.find(record => record.id === recordId);
+  if (existingRecord) {
+    console.log('User already checked in today');
+    return;
+  }
+  
+  const checkInTime = new Date();
+  const isLate = checkInTime.getHours() >= 9 && checkInTime.getMinutes() > 15;
+  
+  // Create a new attendance record
+  const newRecord: AttendanceRecord = {
+    id: recordId,
+    userId: user.id,
+    userName: user.name,
+    date: today,
+    checkInTime: checkInTime,
+    checkOutTime: new Date(today.setHours(17, 0, 0)), // Default to 5:00 PM
+    verificationMethod: verificationMethod,
+    status: isLate ? 'late' : 'on-time',
+  };
+  
+  attendanceRecords.push(newRecord);
+  console.log(`User ${user.name} checked in at ${checkInTime.toLocaleTimeString()}`);
+};
+
 // Check if a user can log in based on biometric status
 export const canUserLogIn = (user: User): boolean => {
   // User must have at least one biometric method registered
   return user.hasFaceRegistered || user.hasFingerprint;
 };
 
-// Empty initial users array - will be populated with newly registered users
+// Array to store newly registered users
 export const registeredUsers: User[] = [];

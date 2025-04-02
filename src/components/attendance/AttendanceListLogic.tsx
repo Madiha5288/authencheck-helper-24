@@ -55,7 +55,7 @@ export const useAttendanceList = ({
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
   const currentRecords = sortedRecords.slice(indexOfFirstRecord, indexOfLastRecord);
   
-  const totalPages = Math.ceil(sortedRecords.length / recordsPerPage);
+  const totalPages = Math.max(1, Math.ceil(sortedRecords.length / recordsPerPage));
   
   // Handle search
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,6 +83,10 @@ export const useAttendanceList = ({
   
   // Handle export (mock functionality)
   const handleExport = () => {
+    if (filteredRecords.length === 0) {
+      alert('No records to export.');
+      return;
+    }
     alert('Export functionality would be implemented here in a production app.');
   };
   

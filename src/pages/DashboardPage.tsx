@@ -43,7 +43,15 @@ const DashboardPage = ({ authState, setAuthState }: DashboardPageProps) => {
       {activeTab === 'attendance' && (
         <div className="space-y-6">
           <h1 className="text-2xl font-bold">Attendance Records</h1>
-          <AttendanceList records={filteredRecords} />
+          {filteredRecords.length > 0 ? (
+            <AttendanceList records={filteredRecords} />
+          ) : (
+            <div className="bg-white rounded-lg shadow border p-6 text-center">
+              <p className="text-muted-foreground">
+                No attendance records yet. Records will appear here as users check in.
+              </p>
+            </div>
+          )}
         </div>
       )}
       
@@ -106,18 +114,22 @@ const DashboardPage = ({ authState, setAuthState }: DashboardPageProps) => {
       {activeTab === 'schedule' && (
         <div className="space-y-6">
           <h1 className="text-2xl font-bold">Work Schedule</h1>
-          <p className="text-muted-foreground">
-            This feature will be implemented in a future update.
-          </p>
+          <div className="bg-white rounded-lg shadow border p-6 text-center">
+            <p className="text-muted-foreground">
+              No schedule data yet. Schedules will appear here as they are created.
+            </p>
+          </div>
         </div>
       )}
       
       {activeTab === 'settings' && (
         <div className="space-y-6">
           <h1 className="text-2xl font-bold">Settings</h1>
-          <p className="text-muted-foreground">
-            This feature will be implemented in a future update.
-          </p>
+          <div className="bg-white rounded-lg shadow border p-6 text-center">
+            <p className="text-muted-foreground">
+              This feature will be implemented in a future update.
+            </p>
+          </div>
         </div>
       )}
     </Layout>
