@@ -1,13 +1,14 @@
+
 import { useEffect, useState, useRef } from "react";
-import { User, VerificationMethod } from "../utils/types";
-import { verifyBiometric, registerBiometric } from "../utils/auth";
-import { isBiometricSupported, isFingerPrintAvailable } from "../utils/biometricAuth";
-import { Check, X, Fingerprint, Camera, ShieldAlert } from "lucide-react";
+import { User } from "../utils/types";
+import { verifyFaceId, registerFaceId } from "../utils/auth";
+import { isBiometricSupported } from "../utils/biometricAuth";
+import { Check, X, Camera, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 
 interface VerificationModalProps {
   user: User;
-  type: "face" | "fingerprint";
+  type: "face";
   isRegister?: boolean;
   onSuccess: () => void;
   onCancel: () => void;
@@ -16,13 +17,12 @@ interface VerificationModalProps {
 
 const VerificationModal = ({
   user,
-  type,
   isRegister = false,
   onSuccess,
   onCancel,
   required = false,
 }: VerificationModalProps) => {
-  const [status, setStatus] = useState<VerificationMethod["status"]>(
+  const [status, setStatus] = useState<"not-registered" | "registered" | "in-progress" | "success" | "failure">(
     isRegister ? "not-registered" : "registered"
   );
   const [accessRequested, setAccessRequested] = useState(false);
@@ -35,15 +35,13 @@ const VerificationModal = ({
 
   useEffect(() => {
     const checkBiometricSupport = async () => {
-      if (type === 'fingerprint') {
-        const supported = await isFingerPrintAvailable();
-        setIsNativeBiometrics(supported);
-        console.log(`Native fingerprint authentication ${supported ? 'is' : 'is not'} supported`);
-      }
+      const supported = await isBiometricSupported();
+      setIsNativeBiometrics(supported);
+      console.log(`Native biometric authentication ${supported ? 'is' : 'is not'} supported`);
     };
     
     checkBiometricSupport();
-  }, [type]);
+  }, []);
 
   const requestCameraAccess = async () => {
     try {
@@ -71,19 +69,6 @@ const VerificationModal = ({
     }
   };
 
-  const requestFingerprintAccess = async () => {
-    const fingerprintAvailable = await isFingerPrintAvailable();
-    
-    if (fingerprintAvailable) {
-      toast.success("Fingerprint sensor detected");
-      setAccessGranted(true);
-      return true;
-    } else {
-      toast.error("No fingerprint sensor detected on this device");
-      return false;
-    }
-  };
-
   const captureFaceImage = () => {
     if (canvasRef.current && videoRef.current) {
       const context = canvasRef.current.getContext('2d');
@@ -101,36 +86,32 @@ const VerificationModal = ({
     setStatus("in-progress");
     
     try {
-      if (type === "face" && !captureFaceImage()) {
+      if (!captureFaceImage()) {
         throw new Error("Failed to capture face image");
       }
       
-      if (type === "fingerprint" && !await isFingerPrintAvailable()) {
-        throw new Error("Fingerprint sensor not available");
-      }
-      
       const result = isRegister 
-        ? await registerBiometric(type, user.id)
-        : await verifyBiometric(type, user.id);
+        ? await registerFaceId(user.id)
+        : await verifyFaceId(user.id);
         
       if (result) {
         setStatus("success");
         setTimeout(() => {
           onSuccess();
-          toast.success(`${type === "face" ? "Facial" : "Fingerprint"} verification successful`);
+          toast.success("Face verification successful");
           
-          if (type === "face" && mediaStreamRef.current) {
+          if (mediaStreamRef.current) {
             mediaStreamRef.current.getTracks().forEach(track => track.stop());
           }
         }, 1000);
       } else {
         setStatus("failure");
-        toast.error(`${type === "face" ? "Facial" : "Fingerprint"} verification failed`);
+        toast.error("Face verification failed");
       }
     } catch (error) {
       console.error("Verification error:", error);
       setStatus("failure");
-      toast.error(`${type === "face" ? "Facial" : "Fingerprint"} verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Face verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -139,12 +120,7 @@ const VerificationModal = ({
       if (!accessRequested) {
         setAccessRequested(true);
         
-        let accessSuccess = false;
-        if (type === "face") {
-          accessSuccess = await requestCameraAccess();
-        } else {
-          accessSuccess = await requestFingerprintAccess();
-        }
+        let accessSuccess = await requestCameraAccess();
         
         if (accessSuccess) {
           setTimeout(() => {
@@ -165,7 +141,7 @@ const VerificationModal = ({
         mediaStreamRef.current.getTracks().forEach(track => track.stop());
       }
     };
-  }, [status, type, accessRequested]);
+  }, [status, accessRequested]);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
@@ -173,102 +149,79 @@ const VerificationModal = ({
         <div className="p-6">
           <div className="flex flex-col items-center justify-center">
             <h3 className="text-xl font-semibold mb-2">
-              {isRegister ? "Register" : "Verify"} {type === "face" ? "Face" : "Fingerprint"}
+              {isRegister ? "Register" : "Verify"} Face ID
             </h3>
-            {isNativeBiometrics && type === "fingerprint" ? (
+            {isNativeBiometrics ? (
               <p className="text-muted-foreground text-center mb-6">
                 <ShieldAlert className="inline-block mr-1 h-5 w-5 text-amber-500" />
                 Native biometric authentication will be used.
-                {isRegister ? " Please follow the prompts to register your fingerprint." : " Please verify with your fingerprint when prompted."}
+                {isRegister ? " Please follow the prompts to register your Face ID." : " Please verify with your Face ID when prompted."}
               </p>
             ) : (
               <p className="text-muted-foreground text-center mb-6">
                 {isRegister
-                  ? `Please ${type === "face" ? "allow camera access" : "place your finger on the sensor"} to register your ${type === "face" ? "face" : "fingerprint"}.`
-                  : `Please ${type === "face" ? "look at the camera" : "place your finger on the scanner"} for verification.`}
+                  ? "Please allow camera access to register your Face ID."
+                  : "Please look at the camera for Face ID verification."}
               </p>
             )}
 
             <div className="w-48 h-48 mb-6 relative">
-              {type === "face" ? (
-                <div className="w-full h-full rounded-lg overflow-hidden border-2 border-primary relative face-recognition-grid">
-                  <video 
-                    ref={videoRef}
-                    className="w-full h-full object-cover"
-                    autoPlay 
-                    muted 
-                    playsInline
-                  />
-                  
-                  <canvas 
-                    ref={canvasRef} 
-                    className="hidden" 
-                  />
-                  
-                  {status === "in-progress" && (
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-primary/80 scanner-line animate-scanning"></div>
-                  )}
-                  {status === "success" && (
-                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                      <Check className="h-16 w-16 text-primary" />
-                    </div>
-                  )}
-                  {status === "failure" && (
-                    <div className="absolute inset-0 bg-destructive/20 flex items-center justify-center">
-                      <X className="h-16 w-16 text-destructive" />
-                    </div>
-                  )}
-                  {!accessGranted && status !== "failure" && status !== "success" && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Camera className="h-16 w-16 text-primary/50 animate-pulse-light" />
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="w-full h-full rounded-lg overflow-hidden border-2 border-primary relative fingerprint-scan bg-accent">
-                  {status === "in-progress" && (
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-primary/80 scanner-line animate-scanning"></div>
-                  )}
-                  {status === "success" && (
-                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                      <Check className="h-16 w-16 text-primary" />
-                    </div>
-                  )}
-                  {status === "failure" && (
-                    <div className="absolute inset-0 bg-destructive/20 flex items-center justify-center">
-                      <X className="h-16 w-16 text-destructive" />
-                    </div>
-                  )}
-                  {status !== "failure" && status !== "success" && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Fingerprint className="h-16 w-16 text-primary/50 animate-pulse-light" />
-                    </div>
-                  )}
-                </div>
-              )}
+              <div className="w-full h-full rounded-lg overflow-hidden border-2 border-primary relative face-recognition-grid">
+                <video 
+                  ref={videoRef}
+                  className="w-full h-full object-cover"
+                  autoPlay 
+                  muted 
+                  playsInline
+                />
+                
+                <canvas 
+                  ref={canvasRef} 
+                  className="hidden" 
+                />
+                
+                {status === "in-progress" && (
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-primary/80 scanner-line animate-scanning"></div>
+                )}
+                {status === "success" && (
+                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                    <Check className="h-16 w-16 text-primary" />
+                  </div>
+                )}
+                {status === "failure" && (
+                  <div className="absolute inset-0 bg-destructive/20 flex items-center justify-center">
+                    <X className="h-16 w-16 text-destructive" />
+                  </div>
+                )}
+                {!accessGranted && status !== "failure" && status !== "success" && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Camera className="h-16 w-16 text-primary/50 animate-pulse-light" />
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="text-center">
               {!accessGranted && status !== "failure" && (
                 <p className="text-sm">
-                  Requesting {type === "face" ? "camera" : "fingerprint sensor"} access...
+                  Requesting camera access...
                 </p>
               )}
               {accessGranted && status === "in-progress" && (
                 <p className="text-sm">
-                  {isRegister ? "Registering" : "Verifying"}...
+                  {isRegister ? "Registering" : "Verifying"} Face ID...
                 </p>
               )}
               {status === "success" && (
                 <p className="text-sm text-primary">
-                  {isRegister ? "Registration" : "Verification"} successful!
+                  {isRegister ? "Face ID registration" : "Face ID verification"} successful!
                 </p>
               )}
               {status === "failure" && (
                 <p className="text-sm text-destructive">
                   {!accessGranted 
-                    ? `${type === "face" ? "Camera" : "Fingerprint sensor"} access denied` 
-                    : `${isRegister ? "Registration" : "Verification"} failed!`}
+                    ? "Camera access denied" 
+                    : `${isRegister ? "Face ID registration" : "Face ID verification"} failed!`}
                   {required && " This is required to continue."}
                 </p>
               )}

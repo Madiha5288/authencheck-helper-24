@@ -24,34 +24,10 @@ const generateChallenge = (): Uint8Array => {
   return arr;
 };
 
-// Check if fingerprint authentication is available
-export const isFingerPrintAvailable = async (): Promise<boolean> => {
-  // First verify platform authenticator is available
-  if (!await isBiometricSupported()) {
-    return false;
-  }
-  
-  // Additional check to verify it's specifically fingerprint authentication
-  try {
-    // Since WebAuthn API doesn't provide a direct method to check fingerprint specifically,
-    // we make a more general check and ensure we're requiring user verification
-    const result = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-    
-    // Additional platform-specific checks could be added here for more precise detection
-    // This would require checking the user agent and platform-specific APIs
-    
-    return result;
-  } catch (error) {
-    console.error('Error checking fingerprint availability:', error);
-    return false;
-  }
-};
-
 // Request biometric authentication
 export const requestBiometricAuth = async (): Promise<boolean> => {
-  // For fingerprint authentication, require fingerprint availability
-  if (!await isFingerPrintAvailable()) {
-    throw new Error('Fingerprint authentication not supported on this device');
+  if (!await isBiometricSupported()) {
+    throw new Error('Biometric authentication not supported on this device');
   }
 
   try {
@@ -64,12 +40,7 @@ export const requestBiometricAuth = async (): Promise<boolean> => {
         challenge,
         rpId: window.location.hostname,
         allowCredentials: [], // Empty to allow any registered credential
-        userVerification: 'required', // Explicitly require user verification (fingerprint, etc)
-        authenticatorSelection: {
-          userVerification: 'required',
-          requireResidentKey: false,
-          authenticatorAttachment: 'platform' // Ensure we're using the built-in authenticator
-        }
+        userVerification: 'required' // Explicitly require user verification (face ID, etc)
       }
     });
 

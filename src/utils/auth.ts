@@ -1,6 +1,7 @@
+
 import { User, LoginCredentials, AuthState, AttendanceRecord } from './types';
 import { users, attendanceRecords } from './mockData';
-import { isBiometricSupported, requestBiometricAuth, isFingerPrintAvailable } from './biometricAuth';
+import { isBiometricSupported, requestBiometricAuth } from './biometricAuth';
 
 // Initial auth state
 export const initialAuthState: AuthState = {
@@ -9,6 +10,9 @@ export const initialAuthState: AuthState = {
   loading: false,
   error: null,
 };
+
+// Array to store newly registered users
+export const registeredUsers: User[] = [];
 
 // Check if user exists in registered users
 export const authenticateUser = (credentials: LoginCredentials): Promise<User> => {
@@ -72,67 +76,50 @@ export const loadAuthFromStorage = (): AuthState => {
   return initialAuthState;
 };
 
-// Check if required biometrics are registered
-export const areBiometricsRegistered = (user: User): boolean => {
-  // At least one biometric method needs to be registered
-  return user.hasFaceRegistered || user.hasFingerprint;
+// Check if face ID is registered
+export const isFaceIdRegistered = (user: User): boolean => {
+  return user.hasFaceRegistered;
 };
 
-// Enhanced verification process with native biometrics when available
-export const verifyBiometric = async (
-  type: 'face' | 'fingerprint',
-  userId: string
-): Promise<boolean> => {
-  // For fingerprints, only use native if available and detected
-  if (type === 'fingerprint') {
-    const isFingerprintAvailable = await isFingerPrintAvailable();
+// Face verification process
+export const verifyFaceId = async (userId: string): Promise<boolean> => {
+  try {
+    // Check if we can use native biometric authentication
+    const isBiometricAvailable = await isBiometricSupported();
     
-    if (isFingerprintAvailable) {
-      try {
-        console.log('Using native fingerprint authentication');
-        return await requestBiometricAuth();
-      } catch (error) {
-        console.error('Native fingerprint authentication failed:', error);
-        // Don't fall back to simulation for fingerprints - require actual hardware
-        return false;
-      }
+    if (isBiometricAvailable) {
+      console.log('Using native biometric authentication');
+      return await requestBiometricAuth();
     } else {
-      console.warn('No fingerprint sensor detected');
-      return false;
+      // Fallback to simulated face verification
+      return new Promise((resolve) => {
+        // Simulate verification process
+        setTimeout(() => {
+          // 95% success rate for simulation purposes
+          const success = Math.random() < 0.95;
+          console.log(`Face verification ${success ? 'succeeded' : 'failed'} for user ${userId}`);
+          resolve(success);
+        }, 2000);
+      });
     }
+  } catch (error) {
+    console.error('Face verification error:', error);
+    return false;
   }
-  
-  // For face verification, continue with existing simulation
-  return new Promise((resolve) => {
-    // Simulate verification process
-    setTimeout(() => {
-      // 95% success rate for simulation purposes
-      const success = Math.random() < 0.95;
-      console.log(`${type} verification ${success ? 'succeeded' : 'failed'} for user ${userId}`);
-      resolve(success);
-    }, 2000); // Slightly faster "scan"
-  });
 };
 
-// Register new biometric with high success rate
-export const registerBiometric = (
-  type: 'face' | 'fingerprint',
-  userId: string
-): Promise<boolean> => {
+// Register face with high success rate
+export const registerFaceId = (userId: string): Promise<boolean> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       // Almost always succeed for registration (98%)
       const success = Math.random() < 0.98;
       
       if (success) {
-        // Find user and update their biometric status
+        // Find user and update their face ID status
         const user = users.find(u => u.id === userId);
         if (user) {
-          if (type === 'face') {
-            user.hasFaceRegistered = true;
-          } else {
-            user.hasFingerprint = true;
-          }
+          user.hasFaceRegistered = true;
           
           // Update the stored user if this is the current user
           const storedUserJson = localStorage.getItem('authUser');
@@ -140,11 +127,7 @@ export const registerBiometric = (
             try {
               const storedUser = JSON.parse(storedUserJson) as User;
               if (storedUser.id === userId) {
-                if (type === 'face') {
-                  storedUser.hasFaceRegistered = true;
-                } else {
-                  storedUser.hasFingerprint = true;
-                }
+                storedUser.hasFaceRegistered = true;
                 localStorage.setItem('authUser', JSON.stringify(storedUser));
               }
             } catch (error) {
@@ -153,10 +136,10 @@ export const registerBiometric = (
           }
         }
         
-        console.log(`${type} registration successful for user ${userId}`);
+        console.log(`Face ID registration successful for user ${userId}`);
         resolve(true);
       } else {
-        console.log(`${type} registration failed for user ${userId}`);
+        console.log(`Face ID registration failed for user ${userId}`);
         resolve(false);
       }
     }, 2500);
@@ -164,7 +147,7 @@ export const registerBiometric = (
 };
 
 // Check in a user and create an attendance record
-export const checkInUser = (userId: string, verificationMethod: 'face' | 'fingerprint'): void => {
+export const checkInUser = (userId: string): void => {
   const user = users.find(u => u.id === userId);
   if (!user) return;
 
@@ -189,7 +172,7 @@ export const checkInUser = (userId: string, verificationMethod: 'face' | 'finger
     date: today,
     checkInTime: checkInTime,
     checkOutTime: new Date(today.setHours(17, 0, 0)), // Default to 5:00 PM
-    verificationMethod: verificationMethod,
+    verificationMethod: 'face',
     status: isLate ? 'late' : 'on-time',
   };
   
@@ -197,14 +180,14 @@ export const checkInUser = (userId: string, verificationMethod: 'face' | 'finger
   console.log(`User ${user.name} checked in at ${checkInTime.toLocaleTimeString()}`);
 };
 
-// Check if a user can log in based on biometric status
+// Check if a user can log in based on face ID status
 export const canUserLogIn = (user: User): boolean => {
-  // User must have at least one biometric method registered
-  return user.hasFaceRegistered || user.hasFingerprint;
+  // User must have face ID registered
+  return user.hasFaceRegistered;
 };
 
 // Enhanced check-out functionality
-export const checkOutUser = (userId: string, verificationMethod: 'face' | 'fingerprint'): void => {
+export const checkOutUser = (userId: string): void => {
   const user = users.find(u => u.id === userId);
   if (!user) return;
 
@@ -224,9 +207,6 @@ export const checkOutUser = (userId: string, verificationMethod: 'face' | 'finge
   console.log(`User ${user.name} checked out at ${existingRecord.checkOutTime.toLocaleTimeString()}`);
 };
 
-// Array to store newly registered users
-export const registeredUsers: User[] = [];
-
 // Function to add a newly registered user to both the registeredUsers array and the main users array
 export const addNewUser = (user: User): void => {
   // Add to registered users array
@@ -235,5 +215,8 @@ export const addNewUser = (user: User): void => {
   // Also add to main users array to ensure it's available for authentication
   users.push(user);
   
+  // Save to localStorage to persist across page refreshes
+  localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+  
   console.log(`User ${user.name} added to database`);
-}
+};

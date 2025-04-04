@@ -1,10 +1,13 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AuthForm from '../components/AuthForm';
-import { AuthState } from '../utils/types';
+import { AuthState, User } from '../utils/types';
 import { motion } from 'framer-motion';
 import { UserCheck } from 'lucide-react';
+import VerificationModal from '../components/VerificationModal';
+import { verifyFaceId } from '../utils/auth';
+import { toast } from 'sonner';
 
 interface LoginProps {
   authState: AuthState;
@@ -12,6 +15,9 @@ interface LoginProps {
 }
 
 const Login = ({ authState, setAuthState }: LoginProps) => {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [showVerification, setShowVerification] = useState(false);
+
   // Auto-redirect to dashboard if already authenticated
   useEffect(() => {
     if (authState.isAuthenticated) {
@@ -19,13 +25,33 @@ const Login = ({ authState, setAuthState }: LoginProps) => {
     }
   }, [authState.isAuthenticated]);
 
-  const handleLoginSuccess = (userData: any) => {
-    setAuthState({
-      isAuthenticated: true,
-      user: userData,
-      loading: false,
-      error: null,
-    });
+  const handleLoginSuccess = (userData: User) => {
+    // Set the current user and show Face ID verification
+    setCurrentUser(userData);
+    setShowVerification(true);
+  };
+
+  const handleVerificationSuccess = () => {
+    if (currentUser) {
+      setAuthState({
+        isAuthenticated: true,
+        user: currentUser,
+        loading: false,
+        error: null,
+      });
+      toast.success('Face ID verified successfully. Welcome back!');
+    }
+  };
+
+  const handleVerificationCancel = () => {
+    toast.error('Face ID verification is required to log in');
+    setShowVerification(false);
+    // Allow them to try again after a short delay
+    setTimeout(() => {
+      if (currentUser) {
+        setShowVerification(true);
+      }
+    }, 1500);
   };
 
   return (
@@ -93,6 +119,18 @@ const Login = ({ authState, setAuthState }: LoginProps) => {
           </motion.div>
         </div>
       </div>
+      
+      {/* Face ID verification modal */}
+      {showVerification && currentUser && (
+        <VerificationModal 
+          user={currentUser}
+          type="face"
+          isRegister={false}
+          required={true}
+          onSuccess={handleVerificationSuccess}
+          onCancel={handleVerificationCancel}
+        />
+      )}
     </div>
   );
 };

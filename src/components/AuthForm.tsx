@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LoginCredentials, User } from '../utils/types';
 import { authenticateUser, saveAuthToStorage, canUserLogIn } from '../utils/auth';
-import { Eye, EyeOff, UserCheck, Fingerprint } from 'lucide-react';
+import { Eye, EyeOff, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AuthFormProps {
@@ -45,9 +45,9 @@ const AuthForm = ({ type, onSuccess }: AuthFormProps) => {
     try {
       const userData = await authenticateUser(formData);
       
-      // Check if user has at least one biometric registered
+      // Check if user has face ID registered
       if (!canUserLogIn(userData)) {
-        toast.error('You must register at least one biometric method to log in');
+        toast.error('You must register Face ID to log in');
         setIsLoading(false);
         return;
       }
@@ -89,8 +89,8 @@ const AuthForm = ({ type, onSuccess }: AuthFormProps) => {
         registeredOn: new Date(),
         lastLogin: new Date(),
         profileImage: '/placeholder.svg',
-        hasFaceRegistered: false, // Will be set during biometric registration
-        hasFingerprint: false, // Will be set during biometric registration
+        hasFaceRegistered: false, // Will be set during Face ID registration
+        hasFingerprint: false, // No longer used, but kept for type compatibility
       };
       
       onSuccess(newUser);
@@ -141,16 +141,12 @@ const AuthForm = ({ type, onSuccess }: AuthFormProps) => {
           </div>
         </div>
         
-        {/* Login notice about biometrics */}
+        {/* Login notice about Face ID */}
         <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md">
-          <p className="mb-2">To log in, you need at least one of:</p>
-          <div className="flex items-center space-x-2 mb-2">
+          <p className="mb-2">To log in, you need:</p>
+          <div className="flex items-center space-x-2">
             <UserCheck size={16} className="text-primary" />
             <span className="font-medium">Face ID verification</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Fingerprint size={16} className="text-primary" />
-            <span className="font-medium">Fingerprint verification</span>
           </div>
         </div>
         
@@ -258,16 +254,12 @@ const AuthForm = ({ type, onSuccess }: AuthFormProps) => {
         />
       </div>
       
-      {/* Simplified biometric notice */}
+      {/* Face ID notice */}
       <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md">
-        <p className="mb-2 font-medium">After registration, you'll choose one biometric method:</p>
-        <div className="flex items-center space-x-2 mb-1">
-          <UserCheck size={16} className="text-primary" />
-          <span>Face ID</span>
-        </div>
+        <p className="mb-2 font-medium">After registration, you'll be prompted to set up:</p>
         <div className="flex items-center space-x-2">
-          <Fingerprint size={16} className="text-primary" />
-          <span>Fingerprint</span>
+          <UserCheck size={16} className="text-primary" />
+          <span>Face ID for secure login and attendance</span>
         </div>
       </div>
       
@@ -278,7 +270,7 @@ const AuthForm = ({ type, onSuccess }: AuthFormProps) => {
           isLoading ? 'opacity-70 cursor-not-allowed' : ''
         }`}
       >
-        {isLoading ? 'Registering...' : 'Register & Set Up Biometrics'}
+        {isLoading ? 'Registering...' : 'Register & Set Up Face ID'}
       </button>
     </form>
   );
