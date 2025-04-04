@@ -24,10 +24,10 @@ const generateChallenge = (): Uint8Array => {
   return arr;
 };
 
-// Request biometric authentication
+// Request face authentication
 export const requestBiometricAuth = async (): Promise<boolean> => {
   if (!await isBiometricSupported()) {
-    throw new Error('Biometric authentication not supported on this device');
+    throw new Error('Face authentication not supported on this device');
   }
 
   try {
@@ -40,7 +40,7 @@ export const requestBiometricAuth = async (): Promise<boolean> => {
         challenge,
         rpId: window.location.hostname,
         allowCredentials: [], // Empty to allow any registered credential
-        userVerification: 'required' // Explicitly require user verification (face ID, etc)
+        userVerification: 'required' // Explicitly require user verification (face ID)
       }
     });
 
@@ -48,7 +48,7 @@ export const requestBiometricAuth = async (): Promise<boolean> => {
     // For our mock implementation, we'll consider the authentication successful if we get here
     return !!credential;
   } catch (error) {
-    console.error('Biometric auth error:', error);
+    console.error('Face authentication error:', error);
     return false;
   }
 };

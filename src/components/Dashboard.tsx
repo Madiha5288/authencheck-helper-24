@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { User, AttendanceRecord } from '../utils/types';
 import { attendanceRecords, getAttendanceStats } from '../utils/mockData';
-import { Check, Clock, UserCheck, Fingerprint, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, Clock, UserCheck, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import UserCard from './UserCard';
 import Stats from './Stats';
@@ -15,7 +15,7 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ user }: DashboardProps) => {
-  const [showVerification, setShowVerification] = useState<'face' | 'fingerprint' | null>(null);
+  const [showVerification, setShowVerification] = useState<'face' | null>(null);
   const [isRegistering, setIsRegistering] = useState(false);
   const [showAllRecords, setShowAllRecords] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -42,21 +42,13 @@ const Dashboard = ({ user }: DashboardProps) => {
   const handleAttendance = (isCheckOut = false) => {
     setIsCheckingOut(isCheckOut);
     
-    // If user has both biometrics registered, ask which one to use
-    if (user.hasFaceRegistered && user.hasFingerprint) {
-      const options = ['face', 'fingerprint'] as const;
-      setShowVerification(options[Math.floor(Math.random() * options.length)]);
-    } 
-    // If only one is registered, use that one
-    else if (user.hasFaceRegistered) {
+    // If user has face registered, use that
+    if (user.hasFaceRegistered) {
       setShowVerification('face');
     } 
-    else if (user.hasFingerprint) {
-      setShowVerification('fingerprint');
-    } 
-    // If none are registered, show an error
+    // If no biometrics are registered, show an error
     else {
-      toast.error('Please register your face or fingerprint first');
+      toast.error('Please register your face ID first');
     }
   };
   
@@ -65,16 +57,12 @@ const Dashboard = ({ user }: DashboardProps) => {
     setShowVerification(null);
     
     if (!isRegistering) {
-      // Record the user's attendance
-      const method = user.hasFaceRegistered && user.hasFingerprint 
-        ? (Math.random() > 0.5 ? 'face' : 'fingerprint')
-        : user.hasFaceRegistered ? 'face' : 'fingerprint';
-      
+      // Record the user's attendance with face recognition
       if (isCheckingOut) {
-        checkOutUser(user.id, method);
+        checkInUser(user.id);
         toast.success('Check-out recorded successfully');
       } else {  
-        checkInUser(user.id, method);
+        checkOutUser(user.id);
         toast.success('Check-in recorded successfully');
       }
       
@@ -88,11 +76,6 @@ const Dashboard = ({ user }: DashboardProps) => {
     setShowVerification('face');
   };
   
-  const handleRegisterFingerprint = () => {
-    setIsRegistering(true);
-    setShowVerification('fingerprint');
-  };
-  
   return (
     <div className="space-y-6 animate-fade-in">
       <h1 className="text-2xl font-bold">Welcome, {user.name}</h1>
@@ -102,7 +85,6 @@ const Dashboard = ({ user }: DashboardProps) => {
         <UserCard 
           user={user}
           onRegisterFace={handleRegisterFace}
-          onRegisterFingerprint={handleRegisterFingerprint}
         />
         
         {/* Today's attendance */}
@@ -125,16 +107,12 @@ const Dashboard = ({ user }: DashboardProps) => {
               
               <div className="flex items-center space-x-3">
                 <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                  {userRecordsToday[0].verificationMethod === 'face' ? (
-                    <UserCheck className="h-5 w-5 text-primary" />
-                  ) : (
-                    <Fingerprint className="h-5 w-5 text-primary" />
-                  )}
+                  <UserCheck className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <p className="font-medium">Verification Method</p>
                   <p className="text-sm text-muted-foreground">
-                    {userRecordsToday[0].verificationMethod === 'face' ? 'Face Recognition' : 'Fingerprint Scan'}
+                    Face Recognition
                   </p>
                 </div>
               </div>
@@ -209,17 +187,8 @@ const Dashboard = ({ user }: DashboardProps) => {
                   </td>
                   <td className="px-4 py-3 text-sm">
                     <span className="inline-flex items-center gap-1">
-                      {record.verificationMethod === 'face' ? (
-                        <>
-                          <UserCheck size={14} className="text-primary" />
-                          <span>Face</span>
-                        </>
-                      ) : (
-                        <>
-                          <Fingerprint size={14} className="text-primary" />
-                          <span>Fingerprint</span>
-                        </>
-                      )}
+                      <UserCheck size={14} className="text-primary" />
+                      <span>Face</span>
                     </span>
                   </td>
                 </tr>
@@ -262,7 +231,7 @@ const Dashboard = ({ user }: DashboardProps) => {
       {showVerification && (
         <VerificationModal
           user={user}
-          type={showVerification}
+          type="face"
           isRegister={isRegistering}
           onSuccess={handleVerificationSuccess}
           onCancel={() => {

@@ -1,7 +1,7 @@
 
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Fingerprint, UserCheck, ShieldCheck } from 'lucide-react';
+import { UserCheck, ShieldCheck } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -71,7 +71,7 @@ const Index = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.8 }}
           >
-            Seamlessly track attendance with cutting-edge facial and fingerprint recognition technology.
+            Seamlessly track attendance with cutting-edge facial recognition technology.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -101,7 +101,7 @@ const Index = () => {
         </motion.h2>
         
         <motion.div 
-          className="grid grid-cols-1 md:grid-cols-3 gap-8"
+          className="grid grid-cols-1 md:grid-cols-2 gap-8"
           variants={staggerChildren}
           initial="hidden"
           whileInView="visible"
@@ -117,19 +117,6 @@ const Index = () => {
             <h3 className="text-xl font-semibold mb-3">Facial Recognition</h3>
             <p className="text-muted-foreground">
               Advanced facial recognition algorithms ensure accurate identification in various lighting conditions.
-            </p>
-          </motion.div>
-          
-          <motion.div 
-            className="bg-white rounded-lg shadow-lg p-6 border card-hover"
-            variants={fadeIn}
-          >
-            <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-              <Fingerprint size={24} className="text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-3">Fingerprint Scanning</h3>
-            <p className="text-muted-foreground">
-              High-precision fingerprint scanning technology provides foolproof identification and fast processing.
             </p>
           </motion.div>
           
