@@ -1,6 +1,6 @@
 import { User, LoginCredentials, AuthState, AttendanceRecord } from './types';
 import { users, attendanceRecords } from './mockData';
-import { isBiometricSupported, requestBiometricAuth } from './biometricAuth';
+import { isBiometricSupported, requestBiometricAuth, isFingerPrintAvailable } from './biometricAuth';
 
 // Initial auth state
 export const initialAuthState: AuthState = {
@@ -83,18 +83,26 @@ export const verifyBiometric = async (
   type: 'face' | 'fingerprint',
   userId: string
 ): Promise<boolean> => {
-  // First check if native biometrics are available (especially for fingerprint)
-  if (type === 'fingerprint' && await isBiometricSupported()) {
-    try {
-      console.log('Using native biometric authentication');
-      return await requestBiometricAuth();
-    } catch (error) {
-      console.warn('Native biometric authentication failed, falling back to simulation:', error);
-      // Fall back to simulation if native biometrics fail
+  // For fingerprints, only use native if available and detected
+  if (type === 'fingerprint') {
+    const isFingerprintAvailable = await isFingerPrintAvailable();
+    
+    if (isFingerprintAvailable) {
+      try {
+        console.log('Using native fingerprint authentication');
+        return await requestBiometricAuth();
+      } catch (error) {
+        console.error('Native fingerprint authentication failed:', error);
+        // Don't fall back to simulation for fingerprints - require actual hardware
+        return false;
+      }
+    } else {
+      console.warn('No fingerprint sensor detected');
+      return false;
     }
   }
   
-  // Fall back to simulated verification
+  // For face verification, continue with existing simulation
   return new Promise((resolve) => {
     // Simulate verification process
     setTimeout(() => {

@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { User, VerificationMethod } from "../utils/types";
 import { verifyBiometric, registerBiometric } from "../utils/auth";
-import { isBiometricSupported } from "../utils/biometricAuth";
+import { isBiometricSupported, isFingerPrintAvailable } from "../utils/biometricAuth";
 import { Check, X, Fingerprint, Camera, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 
@@ -36,9 +36,9 @@ const VerificationModal = ({
   useEffect(() => {
     const checkBiometricSupport = async () => {
       if (type === 'fingerprint') {
-        const supported = await isBiometricSupported();
+        const supported = await isFingerPrintAvailable();
         setIsNativeBiometrics(supported);
-        console.log(`Native biometrics ${supported ? 'are' : 'are not'} supported`);
+        console.log(`Native fingerprint authentication ${supported ? 'is' : 'is not'} supported`);
       }
     };
     
@@ -72,31 +72,14 @@ const VerificationModal = ({
   };
 
   const requestFingerprintAccess = async () => {
-    if (isNativeBiometrics) {
-      toast.success("Native fingerprint authentication available");
+    const fingerprintAvailable = await isFingerPrintAvailable();
+    
+    if (fingerprintAvailable) {
+      toast.success("Fingerprint sensor detected");
       setAccessGranted(true);
       return true;
-    }
-    
-    if (!window.PublicKeyCredential) {
-      toast.error("Fingerprint API not supported in this browser");
-      return false;
-    }
-    
-    try {
-      const result = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-      
-      if (result) {
-        toast.success("Fingerprint sensor detected");
-        setAccessGranted(true);
-        return true;
-      } else {
-        toast.error("No fingerprint sensor detected on this device");
-        return false;
-      }
-    } catch (error) {
-      console.error("Error accessing fingerprint sensor:", error);
-      toast.error("Failed to access fingerprint sensor");
+    } else {
+      toast.error("No fingerprint sensor detected on this device");
       return false;
     }
   };
@@ -120,6 +103,10 @@ const VerificationModal = ({
     try {
       if (type === "face" && !captureFaceImage()) {
         throw new Error("Failed to capture face image");
+      }
+      
+      if (type === "fingerprint" && !await isFingerPrintAvailable()) {
+        throw new Error("Fingerprint sensor not available");
       }
       
       const result = isRegister 
