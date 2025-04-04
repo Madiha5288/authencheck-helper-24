@@ -8,7 +8,7 @@ import UserCard from './UserCard';
 import Stats from './Stats';
 import VerificationModal from './VerificationModal';
 import { format } from 'date-fns';
-import { checkInUser } from '../utils/auth';
+import { checkInUser, checkOutUser } from '../utils/auth';
 
 interface DashboardProps {
   user: User;
@@ -18,6 +18,7 @@ const Dashboard = ({ user }: DashboardProps) => {
   const [showVerification, setShowVerification] = useState<'face' | 'fingerprint' | null>(null);
   const [isRegistering, setIsRegistering] = useState(false);
   const [showAllRecords, setShowAllRecords] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   
   // Get stats
   const stats = getAttendanceStats();
@@ -38,7 +39,9 @@ const Dashboard = ({ user }: DashboardProps) => {
   const hasCheckedIn = userRecordsToday.length > 0;
   
   // Handle check in/out
-  const handleAttendance = () => {
+  const handleAttendance = (isCheckOut = false) => {
+    setIsCheckingOut(isCheckOut);
+    
     // If user has both biometrics registered, ask which one to use
     if (user.hasFaceRegistered && user.hasFingerprint) {
       const options = ['face', 'fingerprint'] as const;
@@ -66,9 +69,16 @@ const Dashboard = ({ user }: DashboardProps) => {
       const method = user.hasFaceRegistered && user.hasFingerprint 
         ? (Math.random() > 0.5 ? 'face' : 'fingerprint')
         : user.hasFaceRegistered ? 'face' : 'fingerprint';
-        
-      checkInUser(user.id, method);
-      toast.success('Attendance recorded successfully');
+      
+      if (isCheckingOut) {
+        checkOutUser(user.id, method);
+        toast.success('Check-out recorded successfully');
+      } else {  
+        checkInUser(user.id, method);
+        toast.success('Check-in recorded successfully');
+      }
+      
+      setIsCheckingOut(false);
     }
   };
   
@@ -140,12 +150,22 @@ const Dashboard = ({ user }: DashboardProps) => {
                   </p>
                 </div>
               </div>
+              
+              {/* Add check-out button if already checked in */}
+              <div className="pt-2">
+                <button
+                  onClick={() => handleAttendance(true)}
+                  className="w-full px-4 py-2 border border-primary text-primary rounded-md hover:bg-primary/10 transition-colors"
+                >
+                  Check Out
+                </button>
+              </div>
             </div>
           ) : (
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-4">You haven't checked in yet</p>
               <button
-                onClick={handleAttendance}
+                onClick={() => handleAttendance(false)}
                 className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
               >
                 Check In Now
@@ -248,6 +268,7 @@ const Dashboard = ({ user }: DashboardProps) => {
           onCancel={() => {
             setShowVerification(null);
             setIsRegistering(false);
+            setIsCheckingOut(false);
           }}
         />
       )}

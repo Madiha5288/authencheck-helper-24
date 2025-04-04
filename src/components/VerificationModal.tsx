@@ -1,8 +1,8 @@
-
 import { useEffect, useState, useRef } from "react";
 import { User, VerificationMethod } from "../utils/types";
 import { verifyBiometric, registerBiometric } from "../utils/auth";
-import { Check, X, Fingerprint, Camera } from "lucide-react";
+import { isBiometricSupported } from "../utils/biometricAuth";
+import { Check, X, Fingerprint, Camera, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 
 interface VerificationModalProps {
@@ -28,11 +28,23 @@ const VerificationModal = ({
   const [accessRequested, setAccessRequested] = useState(false);
   const [accessGranted, setAccessGranted] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [isNativeBiometrics, setIsNativeBiometrics] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Request camera access for face verification
+  useEffect(() => {
+    const checkBiometricSupport = async () => {
+      if (type === 'fingerprint') {
+        const supported = await isBiometricSupported();
+        setIsNativeBiometrics(supported);
+        console.log(`Native biometrics ${supported ? 'are' : 'are not'} supported`);
+      }
+    };
+    
+    checkBiometricSupport();
+  }, [type]);
+
   const requestCameraAccess = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -59,15 +71,19 @@ const VerificationModal = ({
     }
   };
 
-  // Request fingerprint access
   const requestFingerprintAccess = async () => {
+    if (isNativeBiometrics) {
+      toast.success("Native fingerprint authentication available");
+      setAccessGranted(true);
+      return true;
+    }
+    
     if (!window.PublicKeyCredential) {
       toast.error("Fingerprint API not supported in this browser");
       return false;
     }
     
     try {
-      // Check if user verifying platform authenticator is available
       const result = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
       
       if (result) {
@@ -92,7 +108,6 @@ const VerificationModal = ({
         canvasRef.current.width = videoRef.current.videoWidth;
         canvasRef.current.height = videoRef.current.videoHeight;
         context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
-        // In a real app, you would send this image to your server for face recognition
         return true;
       }
     }
@@ -103,12 +118,10 @@ const VerificationModal = ({
     setStatus("in-progress");
     
     try {
-      // For face verification, attempt to capture an image first
       if (type === "face" && !captureFaceImage()) {
         throw new Error("Failed to capture face image");
       }
       
-      // Simulate biometric verification with the backend
       const result = isRegister 
         ? await registerBiometric(type, user.id)
         : await verifyBiometric(type, user.id);
@@ -119,7 +132,6 @@ const VerificationModal = ({
           onSuccess();
           toast.success(`${type === "face" ? "Facial" : "Fingerprint"} verification successful`);
           
-          // Clean up camera resources if used
           if (type === "face" && mediaStreamRef.current) {
             mediaStreamRef.current.getTracks().forEach(track => track.stop());
           }
@@ -136,7 +148,6 @@ const VerificationModal = ({
   };
 
   useEffect(() => {
-    // Request access to the appropriate sensor
     const requestAccess = async () => {
       if (!accessRequested) {
         setAccessRequested(true);
@@ -149,12 +160,10 @@ const VerificationModal = ({
         }
         
         if (accessSuccess) {
-          // After a short delay to show the camera feed, start the verification
           setTimeout(() => {
             startVerification();
           }, 1500);
         } else {
-          // If access denied, allow retry
           setStatus("failure");
         }
       }
@@ -164,7 +173,6 @@ const VerificationModal = ({
       requestAccess();
     }
     
-    // Clean up
     return () => {
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach(track => track.stop());
@@ -180,16 +188,23 @@ const VerificationModal = ({
             <h3 className="text-xl font-semibold mb-2">
               {isRegister ? "Register" : "Verify"} {type === "face" ? "Face" : "Fingerprint"}
             </h3>
-            <p className="text-muted-foreground text-center mb-6">
-              {isRegister
-                ? `Please ${type === "face" ? "allow camera access" : "place your finger on the sensor"} to register your ${type === "face" ? "face" : "fingerprint"}.`
-                : `Please ${type === "face" ? "look at the camera" : "place your finger on the scanner"} for verification.`}
-            </p>
+            {isNativeBiometrics && type === "fingerprint" ? (
+              <p className="text-muted-foreground text-center mb-6">
+                <ShieldAlert className="inline-block mr-1 h-5 w-5 text-amber-500" />
+                Native biometric authentication will be used.
+                {isRegister ? " Please follow the prompts to register your fingerprint." : " Please verify with your fingerprint when prompted."}
+              </p>
+            ) : (
+              <p className="text-muted-foreground text-center mb-6">
+                {isRegister
+                  ? `Please ${type === "face" ? "allow camera access" : "place your finger on the sensor"} to register your ${type === "face" ? "face" : "fingerprint"}.`
+                  : `Please ${type === "face" ? "look at the camera" : "place your finger on the scanner"} for verification.`}
+              </p>
+            )}
 
             <div className="w-48 h-48 mb-6 relative">
               {type === "face" ? (
                 <div className="w-full h-full rounded-lg overflow-hidden border-2 border-primary relative face-recognition-grid">
-                  {/* Camera feed for face recognition */}
                   <video 
                     ref={videoRef}
                     className="w-full h-full object-cover"
@@ -198,7 +213,6 @@ const VerificationModal = ({
                     playsInline
                   />
                   
-                  {/* Hidden canvas used for capturing image */}
                   <canvas 
                     ref={canvasRef} 
                     className="hidden" 
@@ -277,7 +291,6 @@ const VerificationModal = ({
         <div className="flex border-t p-4">
           <button
             onClick={() => {
-              // Stop media tracks if any
               if (mediaStreamRef.current) {
                 mediaStreamRef.current.getTracks().forEach(track => track.stop());
               }

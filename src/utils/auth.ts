@@ -1,6 +1,6 @@
-
 import { User, LoginCredentials, AuthState, AttendanceRecord } from './types';
 import { users, attendanceRecords } from './mockData';
+import { isBiometricSupported, requestBiometricAuth } from './biometricAuth';
 
 // Initial auth state
 export const initialAuthState: AuthState = {
@@ -78,11 +78,23 @@ export const areBiometricsRegistered = (user: User): boolean => {
   return user.hasFaceRegistered || user.hasFingerprint;
 };
 
-// Simulated verification process with increased success rate
-export const verifyBiometric = (
+// Enhanced verification process with native biometrics when available
+export const verifyBiometric = async (
   type: 'face' | 'fingerprint',
   userId: string
 ): Promise<boolean> => {
+  // First check if native biometrics are available (especially for fingerprint)
+  if (type === 'fingerprint' && await isBiometricSupported()) {
+    try {
+      console.log('Using native biometric authentication');
+      return await requestBiometricAuth();
+    } catch (error) {
+      console.warn('Native biometric authentication failed, falling back to simulation:', error);
+      // Fall back to simulation if native biometrics fail
+    }
+  }
+  
+  // Fall back to simulated verification
   return new Promise((resolve) => {
     // Simulate verification process
     setTimeout(() => {
@@ -181,6 +193,27 @@ export const checkInUser = (userId: string, verificationMethod: 'face' | 'finger
 export const canUserLogIn = (user: User): boolean => {
   // User must have at least one biometric method registered
   return user.hasFaceRegistered || user.hasFingerprint;
+};
+
+// Enhanced check-out functionality
+export const checkOutUser = (userId: string, verificationMethod: 'face' | 'fingerprint'): void => {
+  const user = users.find(u => u.id === userId);
+  if (!user) return;
+
+  const today = new Date();
+  const recordId = `${userId}-${today.toISOString().split('T')[0]}`;
+  
+  // Find the user's record for today
+  const existingRecord = attendanceRecords.find(record => record.id === recordId);
+  if (!existingRecord) {
+    console.log('No check-in record found for today');
+    return;
+  }
+  
+  // Update the check-out time
+  existingRecord.checkOutTime = new Date();
+  
+  console.log(`User ${user.name} checked out at ${existingRecord.checkOutTime.toLocaleTimeString()}`);
 };
 
 // Array to store newly registered users
