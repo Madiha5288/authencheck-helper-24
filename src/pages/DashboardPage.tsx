@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -113,10 +112,6 @@ const DashboardPage = ({ authState, setAuthState }: DashboardPageProps) => {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Face ID:</span>
                       <span>{user.hasFaceRegistered ? 'Registered' : 'Not Registered'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Fingerprint:</span>
-                      <span>{user.hasFingerprint ? 'Registered' : 'Not Registered'}</span>
                     </div>
                   </div>
                 </div>

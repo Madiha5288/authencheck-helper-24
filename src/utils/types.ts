@@ -11,7 +11,6 @@ export interface User {
   lastLogin: Date;
   profileImage: string;
   hasFaceRegistered: boolean;
-  hasFingerprint: boolean;
   schedule?: WeeklySchedule;
 }
 
@@ -22,7 +21,7 @@ export interface AttendanceRecord {
   date: Date;
   checkInTime: Date;
   checkOutTime: Date;
-  verificationMethod: 'face' | 'fingerprint';
+  verificationMethod: 'face';
   status: 'on-time' | 'late' | 'absent';
 }
 
@@ -55,6 +54,6 @@ export interface AuthState {
 }
 
 export interface VerificationMethod {
-  type: 'face' | 'fingerprint';
+  type: 'face';
   status: 'not-registered' | 'registered' | 'in-progress' | 'success' | 'failure';
 }

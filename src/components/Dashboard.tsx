@@ -56,18 +56,21 @@ const Dashboard = ({ user }: DashboardProps) => {
   const handleVerificationSuccess = () => {
     setShowVerification(null);
     
-    if (!isRegistering) {
-      // Record the user's attendance with face recognition
-      if (isCheckingOut) {
-        checkInUser(user.id);
-        toast.success('Check-out recorded successfully');
-      } else {  
-        checkOutUser(user.id);
-        toast.success('Check-in recorded successfully');
-      }
-      
-      setIsCheckingOut(false);
+    if (isRegistering) {
+      setIsRegistering(false);
+      return;
     }
+    
+    // Record the user's attendance with face recognition
+    if (isCheckingOut) {
+      checkOutUser(user.id);
+      toast.success('Check-out recorded successfully');
+    } else {  
+      checkInUser(user.id);
+      toast.success('Check-in recorded successfully');
+    }
+    
+    setIsCheckingOut(false);
   };
   
   // Handle biometric registration

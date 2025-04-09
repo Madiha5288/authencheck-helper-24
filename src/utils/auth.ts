@@ -14,6 +14,19 @@ export const initialAuthState: AuthState = {
 // Array to store newly registered users
 export const registeredUsers: User[] = [];
 
+// Load previously registered users from localStorage
+(() => {
+  try {
+    const storedUsers = localStorage.getItem('registeredUsers');
+    if (storedUsers) {
+      const parsedUsers = JSON.parse(storedUsers);
+      registeredUsers.push(...parsedUsers);
+    }
+  } catch (error) {
+    console.error('Error loading registered users from localStorage:', error);
+  }
+})();
+
 // Check if user exists in registered users
 export const authenticateUser = (credentials: LoginCredentials): Promise<User> => {
   return new Promise((resolve, reject) => {
@@ -87,21 +100,8 @@ export const verifyFaceId = async (userId: string): Promise<boolean> => {
     // Check if we can use native biometric authentication
     const isBiometricAvailable = await isBiometricSupported();
     
-    if (isBiometricAvailable) {
-      console.log('Using native biometric authentication');
-      return await requestBiometricAuth();
-    } else {
-      // Fallback to simulated face verification
-      return new Promise((resolve) => {
-        // Simulate verification process
-        setTimeout(() => {
-          // 95% success rate for simulation purposes
-          const success = Math.random() < 0.95;
-          console.log(`Face verification ${success ? 'succeeded' : 'failed'} for user ${userId}`);
-          resolve(success);
-        }, 2000);
-      });
-    }
+    console.log('Using native biometric authentication');
+    return await requestBiometricAuth();
   } catch (error) {
     console.error('Face verification error:', error);
     return false;
@@ -136,6 +136,14 @@ export const registerFaceId = (userId: string): Promise<boolean> => {
           }
         }
         
+        // Also update in registeredUsers array
+        const registeredUser = registeredUsers.find(u => u.id === userId);
+        if (registeredUser) {
+          registeredUser.hasFaceRegistered = true;
+          // Update the registeredUsers in localStorage
+          localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+        }
+        
         console.log(`Face ID registration successful for user ${userId}`);
         resolve(true);
       } else {
@@ -148,7 +156,7 @@ export const registerFaceId = (userId: string): Promise<boolean> => {
 
 // Check in a user and create an attendance record
 export const checkInUser = (userId: string): void => {
-  const user = users.find(u => u.id === userId);
+  const user = users.find(u => u.id === userId) || registeredUsers.find(u => u.id === userId);
   if (!user) return;
 
   const today = new Date();
@@ -188,7 +196,7 @@ export const canUserLogIn = (user: User): boolean => {
 
 // Enhanced check-out functionality
 export const checkOutUser = (userId: string): void => {
-  const user = users.find(u => u.id === userId);
+  const user = users.find(u => u.id === userId) || registeredUsers.find(u => u.id === userId);
   if (!user) return;
 
   const today = new Date();
