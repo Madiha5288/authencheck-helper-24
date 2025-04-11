@@ -90,7 +90,6 @@ const AuthForm = ({ type, onSuccess }: AuthFormProps) => {
         lastLogin: new Date(),
         profileImage: '/placeholder.svg',
         hasFaceRegistered: false, // Will be set during Face ID registration
-        hasFingerprint: false, // No longer used, but kept for type compatibility
       };
       
       onSuccess(newUser);

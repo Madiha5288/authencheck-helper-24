@@ -36,8 +36,7 @@ const Register = ({ authState, setAuthState }: RegisterProps) => {
     if (registeredUser) {
       const updatedUser = {
         ...registeredUser,
-        hasFaceRegistered: true,
-        hasFingerprint: false
+        hasFaceRegistered: true
       };
       
       // Add user to database
