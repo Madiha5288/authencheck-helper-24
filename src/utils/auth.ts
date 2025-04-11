@@ -214,7 +214,7 @@ export const checkOutUser = (userId: string): void => {
   console.log(`User ${user.name} checked out at ${existingRecord.checkOutTime.toLocaleTimeString()}`);
 };
 
-// Function to add a newly registered user to both the registeredUsers array and the main users array
+// Function to add a newly registered user to both the registeredUsers array and localStorage
 export const addNewUser = (user: User): void => {
   // Add to registered users array
   registeredUsers.push(user);
