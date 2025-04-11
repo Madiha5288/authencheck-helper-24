@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AuthForm from '../components/AuthForm';
 import { AuthState, User } from '../utils/types';
 import { motion } from 'framer-motion';
@@ -15,43 +15,88 @@ interface LoginProps {
 }
 
 const Login = ({ authState, setAuthState }: LoginProps) => {
+  const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showVerification, setShowVerification] = useState(false);
+  const [verificationAttempts, setVerificationAttempts] = useState(0);
+  const [bypassVerification, setBypassVerification] = useState(false);
 
   // Auto-redirect to dashboard if already authenticated
   useEffect(() => {
     if (authState.isAuthenticated) {
-      window.location.href = '/dashboard';
+      navigate('/dashboard');
     }
-  }, [authState.isAuthenticated]);
+  }, [authState.isAuthenticated, navigate]);
 
   const handleLoginSuccess = (userData: User) => {
     // Set the current user and show Face ID verification
     setCurrentUser(userData);
+    
+    // If user doesn't have face registered, skip verification
+    if (!userData.hasFaceRegistered) {
+      handleLoginWithoutVerification();
+      return;
+    }
+    
     setShowVerification(true);
   };
 
   const handleVerificationSuccess = () => {
     if (currentUser) {
-      setAuthState({
-        isAuthenticated: true,
-        user: currentUser,
-        loading: false,
-        error: null,
-      });
+      completeLogin(currentUser);
       toast.success('Face ID verified successfully. Welcome back!');
     }
   };
 
   const handleVerificationCancel = () => {
-    toast.error('Face ID verification is required to log in');
     setShowVerification(false);
-    // Allow them to try again after a short delay
-    setTimeout(() => {
-      if (currentUser) {
-        setShowVerification(true);
-      }
-    }, 1500);
+    setVerificationAttempts(prev => prev + 1);
+    
+    // After 2 attempts, suggest bypass option
+    if (verificationAttempts >= 1) {
+      toast.error('Having trouble with Face ID verification?', {
+        action: {
+          label: 'Login without Face ID',
+          onClick: handleLoginWithoutVerification
+        },
+        duration: 5000,
+      });
+    } else {
+      toast.error('Face ID verification is required to log in');
+      // Allow them to try again after a short delay
+      setTimeout(() => {
+        if (currentUser && !bypassVerification) {
+          setShowVerification(true);
+        }
+      }, 1500);
+    }
+  };
+  
+  const handleLoginWithoutVerification = () => {
+    setBypassVerification(true);
+    setShowVerification(false);
+    
+    if (currentUser) {
+      completeLogin(currentUser);
+      toast.success('Logged in without Face ID verification');
+    }
+  };
+  
+  const completeLogin = (user: User) => {
+    // Update auth state
+    setAuthState({
+      isAuthenticated: true,
+      user: user,
+      loading: false,
+      error: null
+    });
+    
+    // Save to local storage
+    localStorage.setItem('authUser', JSON.stringify(user));
+    localStorage.setItem('isAuthenticated', 'true');
+    
+    // Navigate to dashboard
+    navigate('/dashboard');
   };
 
   return (
@@ -126,7 +171,7 @@ const Login = ({ authState, setAuthState }: LoginProps) => {
           user={currentUser}
           type="face"
           isRegister={false}
-          required={true}
+          required={false} // Make it optional
           onSuccess={handleVerificationSuccess}
           onCancel={handleVerificationCancel}
         />
