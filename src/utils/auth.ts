@@ -1,4 +1,3 @@
-
 import { User, LoginCredentials, AuthState, AttendanceRecord } from './types';
 import { users, attendanceRecords } from './mockData';
 import { isBiometricSupported, requestBiometricAuth } from './biometricAuth';
@@ -47,7 +46,7 @@ export const authenticateUser = (credentials: LoginCredentials): Promise<User> =
       if (user) {
         // Update last login
         user.lastLogin = new Date();
-        resolve(user);
+        resolve({...user}); // Return a copy of the user object
       } else {
         reject(new Error('Invalid email or password'));
       }
@@ -219,9 +218,6 @@ export const checkOutUser = (userId: string): void => {
 export const addNewUser = (user: User): void => {
   // Add to registered users array
   registeredUsers.push(user);
-  
-  // Also add to main users array to ensure it's available for authentication
-  users.push(user);
   
   // Save to localStorage to persist across page refreshes
   localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));

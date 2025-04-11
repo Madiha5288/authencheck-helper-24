@@ -29,15 +29,16 @@ const Login = ({ authState, setAuthState }: LoginProps) => {
   }, [authState.isAuthenticated, navigate]);
 
   const handleLoginSuccess = (userData: User) => {
-    // Set the current user and show Face ID verification
+    // Set the current user
     setCurrentUser(userData);
     
-    // If user doesn't have face registered, skip verification
+    // If user doesn't have face registered or it's not required, skip verification
     if (!userData.hasFaceRegistered) {
       handleLoginWithoutVerification();
       return;
     }
     
+    // Show face verification
     setShowVerification(true);
   };
 
@@ -52,7 +53,7 @@ const Login = ({ authState, setAuthState }: LoginProps) => {
     setShowVerification(false);
     setVerificationAttempts(prev => prev + 1);
     
-    // After 2 attempts, suggest bypass option
+    // After first attempt, suggest bypass option
     if (verificationAttempts >= 1) {
       toast.error('Having trouble with Face ID verification?', {
         action: {
@@ -78,7 +79,7 @@ const Login = ({ authState, setAuthState }: LoginProps) => {
     
     if (currentUser) {
       completeLogin(currentUser);
-      toast.success('Logged in without Face ID verification');
+      toast.success('Logged in successfully');
     }
   };
   
@@ -91,7 +92,7 @@ const Login = ({ authState, setAuthState }: LoginProps) => {
       error: null
     });
     
-    // Save to local storage
+    // Save to local storage for persistence
     localStorage.setItem('authUser', JSON.stringify(user));
     localStorage.setItem('isAuthenticated', 'true');
     

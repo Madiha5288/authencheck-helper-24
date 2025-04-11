@@ -1,8 +1,7 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LoginCredentials, User } from '../utils/types';
-import { authenticateUser, saveAuthToStorage, canUserLogIn } from '../utils/auth';
+import { authenticateUser, saveAuthToStorage, canUserLogIn, addNewUser } from '../utils/auth';
 import { Eye, EyeOff, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -92,6 +91,10 @@ const AuthForm = ({ type, onSuccess }: AuthFormProps) => {
         hasFaceRegistered: false, // Will be set during Face ID registration
       };
       
+      // Add the new user to our "database" (local storage)
+      addNewUser(newUser);
+      
+      // Pass the user data to the parent component
       onSuccess(newUser);
       setIsLoading(false);
     }, 1000);
