@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LoginCredentials, User } from '../utils/types';
@@ -54,7 +55,8 @@ const AuthForm = ({ type, onSuccess }: AuthFormProps) => {
       saveAuthToStorage(userData);
       onSuccess(userData);
       toast.success('Login successful!');
-      navigate('/dashboard');
+      // Changed from dashboard to users page
+      navigate('/users');
     } catch (error) {
       console.error('Login failed:', error);
       toast.error('Invalid email or password. Please try again.');

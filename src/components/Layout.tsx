@@ -1,4 +1,3 @@
-
 import { ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { User, UserCheck, Calendar, BarChart2, Settings, LogOut } from 'lucide-react';
@@ -49,8 +48,11 @@ const Layout = ({ children, authState, setAuthState }: LayoutProps) => {
     if (path === '/dashboard' && location.pathname === '/dashboard') {
       return true;
     }
+    if (path === '/users' && location.pathname === '/users') {
+      return true;
+    }
     // For other routes, check if the path is in the location pathname
-    return path !== '/dashboard' && location.pathname.includes(path.substring(1));
+    return path !== '/dashboard' && path !== '/users' && location.pathname.includes(path.substring(1));
   };
 
   const menuItems = [

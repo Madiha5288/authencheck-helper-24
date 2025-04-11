@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthForm from '../components/AuthForm';
@@ -24,7 +23,7 @@ const Login = ({ authState, setAuthState }: LoginProps) => {
   // Auto-redirect to dashboard if already authenticated
   useEffect(() => {
     if (authState.isAuthenticated) {
-      navigate('/dashboard');
+      navigate('/users');
     }
   }, [authState.isAuthenticated, navigate]);
 
@@ -96,8 +95,8 @@ const Login = ({ authState, setAuthState }: LoginProps) => {
     localStorage.setItem('authUser', JSON.stringify(user));
     localStorage.setItem('isAuthenticated', 'true');
     
-    // Navigate to dashboard
-    navigate('/dashboard');
+    // Navigate to users page instead of dashboard
+    navigate('/users');
   };
 
   return (
