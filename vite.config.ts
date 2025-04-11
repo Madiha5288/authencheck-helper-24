@@ -23,4 +23,3 @@ export default defineConfig(({ mode }) => ({
   // Override the default config path to use our custom one
   configFile: path.resolve(__dirname, "./src/tsconfig.override.json")
 }));
-
