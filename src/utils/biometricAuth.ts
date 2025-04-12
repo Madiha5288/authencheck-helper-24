@@ -12,6 +12,23 @@ export const isBiometricSupported = async (): Promise<boolean> => {
 };
 
 /**
+ * Request biometric authentication from the device
+ */
+export const requestBiometricAuth = async (): Promise<boolean> => {
+  try {
+    // In a real application, this would trigger native biometric auth
+    // For simulation, we'll just return true after a delay (high success rate)
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // 95% success rate for simulation
+    return Math.random() < 0.95;
+  } catch (error) {
+    console.error("Error requesting biometric authentication:", error);
+    return false;
+  }
+};
+
+/**
  * Request access to the camera (in a real app)
  */
 export const requestCameraAccess = async (): Promise<MediaStream | null> => {

@@ -1,5 +1,48 @@
 
-import { AttendanceRecord } from './types';
+import { AttendanceRecord, User } from './types';
+
+// Mock user database
+export const users: User[] = [
+  {
+    id: 'user-1',
+    name: 'Admin User',
+    email: 'admin@example.com',
+    password: 'password',
+    role: 'admin',
+    department: 'IT',
+    position: 'System Administrator',
+    registeredOn: new Date('2023-01-01'),
+    lastLogin: new Date(),
+    profileImage: '/placeholder.svg',
+    hasFaceRegistered: true,
+  },
+  {
+    id: 'user-2',
+    name: 'John Smith',
+    email: 'john@example.com',
+    password: 'password',
+    role: 'user',
+    department: 'HR',
+    position: 'HR Specialist',
+    registeredOn: new Date('2023-02-15'),
+    lastLogin: new Date(),
+    profileImage: '/placeholder.svg',
+    hasFaceRegistered: true,
+  },
+  {
+    id: 'user-3',
+    name: 'Jane Doe',
+    email: 'jane@example.com',
+    password: 'password',
+    role: 'user',
+    department: 'Finance',
+    position: 'Financial Analyst',
+    registeredOn: new Date('2023-03-10'),
+    lastLogin: new Date(),
+    profileImage: '/placeholder.svg',
+    hasFaceRegistered: false,
+  }
+];
 
 // Generate mock attendance records
 export const attendanceRecords: AttendanceRecord[] = [
