@@ -1,190 +1,189 @@
 
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { UserCheck, ShieldCheck } from 'lucide-react';
+import { Check, Shield, Clock } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
 
-  // Animation variants
-  const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.6 }
-    }
-  };
-
-  const staggerChildren = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2
-      }
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      {/* Header with navigation */}
-      <header className="container mx-auto py-6 px-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <div className="flex items-center justify-center h-10 w-10 rounded-md bg-primary text-primary-foreground">
-              <UserCheck size={20} />
+    <div className="min-h-screen flex flex-col items-center">
+      {/* Hero section */}
+      <header className="w-full bg-white pt-6 pb-14 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center mb-10">
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center justify-center h-10 w-10 rounded-md bg-primary text-primary-foreground">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-6 w-6"
+                >
+                  <path d="M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path>
+                  <path d="M16 15a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path>
+                  <rect x="2" y="11" width="4" height="4" rx="1"></rect>
+                  <path d="M4 11V8a4 4 0 0 1 4-4h1"></path>
+                  <path d="M4 15v3a4 4 0 0 0 4 4h9a4 4 0 0 0 4-4v-3"></path>
+                  <path d="M18 11V9a4 4 0 0 0-4-4h-1"></path>
+                  <path d="M14 5l2 2-2 2"></path>
+                  <path d="M10 19l-2-2 2-2"></path>
+                </svg>
+              </div>
+              <span className="font-semibold text-xl">AttendAI</span>
             </div>
-            <span className="font-semibold text-xl">AttendAI</span>
+            <div className="space-x-4">
+              <button 
+                onClick={() => navigate('/login')}
+                className="px-4 py-2 rounded-md border hover:bg-accent transition-colors"
+              >
+                Login
+              </button>
+              <button 
+                onClick={() => navigate('/register')}
+                className="px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/90 transition-colors"
+              >
+                Register
+              </button>
+            </div>
           </div>
-          <div className="flex space-x-4">
-            <button 
-              onClick={() => navigate('/login')}
-              className="px-4 py-2 rounded-md text-muted-foreground hover:bg-accent transition-colors"
-            >
-              Login
-            </button>
-            <button 
-              onClick={() => navigate('/register')}
-              className="px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-            >
-              Register
-            </button>
+          
+          <div className="flex flex-col md:flex-row items-center">
+            <div className="md:w-1/2 mb-8 md:mb-0">
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                Secure Attendance Tracking with Facial Recognition
+              </h1>
+              <p className="text-lg text-muted-foreground mb-6">
+                AttendAI makes workplace attendance tracking secure, reliable and easy using advanced facial recognition technology.
+              </p>
+              <div className="flex space-x-4">
+                <button 
+                  onClick={() => navigate('/register')}
+                  className="px-6 py-3 rounded-md bg-primary text-white hover:bg-primary/90 transition-colors"
+                >
+                  Get Started
+                </button>
+                <button className="px-6 py-3 rounded-md border hover:bg-accent transition-colors">
+                  Learn More
+                </button>
+              </div>
+            </div>
+            <div className="md:w-1/2">
+              <div className="rounded-xl overflow-hidden shadow-xl">
+                <img 
+                  src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80" 
+                  alt="Facial recognition illustration" 
+                  className="w-full"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </header>
-
-      {/* Hero section */}
-      <section className="container mx-auto py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.h1 
-            className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            AI-Powered Attendance System for the Modern Workplace
-          </motion.h1>
-          <motion.p 
-            className="text-lg md:text-xl text-muted-foreground mb-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.8 }}
-          >
-            Seamlessly track attendance with cutting-edge facial recognition technology.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-          >
-            <button 
-              onClick={() => navigate('/login')}
-              className="px-6 py-3 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg"
-            >
-              Get Started
-            </button>
-          </motion.div>
-        </div>
-      </section>
-
+      
       {/* Features section */}
-      <section className="container mx-auto py-20 px-4">
-        <motion.h2 
-          className="text-2xl md:text-3xl font-bold text-center mb-12"
-          variants={fadeIn}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-        >
-          Advanced Security Features
-        </motion.h2>
-        
-        <motion.div 
-          className="grid grid-cols-1 md:grid-cols-2 gap-8"
-          variants={staggerChildren}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-        >
-          <motion.div 
-            className="bg-white rounded-lg shadow-lg p-6 border card-hover"
-            variants={fadeIn}
-          >
-            <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-              <UserCheck size={24} className="text-primary" />
+      <section className="w-full py-20 px-4 bg-accent">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-12">Why Choose AttendAI?</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <Shield className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Secure Authentication</h3>
+              <p className="text-muted-foreground">
+                State-of-the-art facial recognition ensures only authorized individuals can check in, eliminating buddy punching.
+              </p>
             </div>
-            <h3 className="text-xl font-semibold mb-3">Facial Recognition</h3>
-            <p className="text-muted-foreground">
-              Advanced facial recognition algorithms ensure accurate identification in various lighting conditions.
-            </p>
-          </motion.div>
-          
-          <motion.div 
-            className="bg-white rounded-lg shadow-lg p-6 border card-hover"
-            variants={fadeIn}
-          >
-            <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-              <ShieldCheck size={24} className="text-primary" />
+            
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <Clock className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Time Efficiency</h3>
+              <p className="text-muted-foreground">
+                Quick check-in and check-out process saves time and increases productivity in the workplace.
+              </p>
             </div>
-            <h3 className="text-xl font-semibold mb-3">Secure Authentication</h3>
-            <p className="text-muted-foreground">
-              Multi-factor authentication options and encrypted data storage to protect sensitive information.
-            </p>
-          </motion.div>
-        </motion.div>
-      </section>
-
-      {/* Call-to-action section */}
-      <section className="bg-primary text-primary-foreground py-16">
-        <div className="container mx-auto px-4 text-center">
-          <motion.h2 
-            className="text-2xl md:text-3xl font-bold mb-6"
-            variants={fadeIn}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            Ready to Modernize Your Attendance System?
-          </motion.h2>
-          <motion.p 
-            className="text-lg mb-8 opacity-90 max-w-2xl mx-auto"
-            variants={fadeIn}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            Join thousands of organizations that have streamlined their attendance process with our AI-powered solution.
-          </motion.p>
-          <motion.div
-            variants={fadeIn}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            <button 
-              onClick={() => navigate('/register')}
-              className="px-6 py-3 rounded-md bg-white text-primary hover:bg-opacity-90 transition-colors"
-            >
-              Sign Up Now
-            </button>
-          </motion.div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <Check className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Accurate Reporting</h3>
+              <p className="text-muted-foreground">
+                Comprehensive attendance reports and analytics help managers make informed decisions.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
-
+      
+      {/* CTA section */}
+      <section className="w-full py-16 px-4 bg-primary">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-white mb-4">Ready to modernize your attendance system?</h2>
+          <p className="text-primary-foreground/90 mb-8">
+            Join thousands of companies that trust AttendAI for secure and reliable attendance tracking.
+          </p>
+          <button 
+            onClick={() => navigate('/register')}
+            className="px-8 py-3 bg-white text-primary rounded-md hover:bg-white/90 transition-colors"
+          >
+            Start Your Free Trial
+          </button>
+        </div>
+      </section>
+      
       {/* Footer */}
-      <footer className="bg-background py-12 border-t">
-        <div className="container mx-auto px-4">
+      <footer className="w-full py-12 px-4 bg-white border-t">
+        <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
               <div className="flex items-center justify-center h-8 w-8 rounded-md bg-primary text-primary-foreground">
-                <UserCheck size={16} />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-5 w-5"
+                >
+                  <path d="M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path>
+                  <path d="M16 15a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path>
+                  <rect x="2" y="11" width="4" height="4" rx="1"></rect>
+                  <path d="M4 11V8a4 4 0 0 1 4-4h1"></path>
+                  <path d="M4 15v3a4 4 0 0 0 4 4h9a4 4 0 0 0 4-4v-3"></path>
+                  <path d="M18 11V9a4 4 0 0 0-4-4h-1"></path>
+                  <path d="M14 5l2 2-2 2"></path>
+                  <path d="M10 19l-2-2 2-2"></path>
+                </svg>
               </div>
               <span className="font-semibold">AttendAI</span>
             </div>
-            <div className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} AttendAI. All rights reserved.
+            <div className="flex space-x-6">
+              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+                Terms
+              </a>
+              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+                Privacy
+              </a>
+              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+                Contact
+              </a>
             </div>
+          </div>
+          <div className="mt-8 text-center text-sm text-muted-foreground">
+            &copy; {new Date().getFullYear()} AttendAI. All rights reserved.
           </div>
         </div>
       </footer>

@@ -1,85 +1,95 @@
 
+// This is a simulation of biometric authentication
+// In a real app, this would integrate with face-api.js or a similar library
+
 /**
- * Utility functions for biometric authentication using WebAuthn
+ * Check if the device supports biometric authentication
  */
-
-// Check if the device supports biometric authentication
 export const isBiometricSupported = async (): Promise<boolean> => {
-  if (typeof window === 'undefined' || !window.PublicKeyCredential) {
-    return false;
-  }
+  // In a real app, this would check for webcam/fingerprint reader availability
+  // For this simulation, we'll return false so we can show our simulated UI
+  return false;
+};
 
+/**
+ * Request access to the camera (in a real app)
+ */
+export const requestCameraAccess = async (): Promise<MediaStream | null> => {
   try {
-    return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    // In a real application, this would actually request camera access
+    // const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    // return stream;
+    
+    // For simulation, we'll just return null
+    return null;
   } catch (error) {
-    console.error('Error checking biometric support:', error);
-    return false;
+    console.error("Error accessing camera:", error);
+    return null;
   }
 };
 
-// Generate a random challenge
-const generateChallenge = (): Uint8Array => {
-  const arr = new Uint8Array(32);
-  window.crypto.getRandomValues(arr);
-  return arr;
-};
-
-// Request face authentication with fallback to simulation when in iframe
-export const requestBiometricAuth = async (): Promise<boolean> => {
-  if (!await isBiometricSupported()) {
-    console.log('Face authentication not supported on this device, falling back to simulation');
-    return simulatedBiometricAuth();
-  }
-
+/**
+ * Load face detection models (in a real app)
+ */
+export const loadFaceDetectionModels = async (): Promise<boolean> => {
   try {
-    // Check if we're in an iframe - WebAuthn typically doesn't work in iframes
-    const isInIframe = window !== window.top;
+    // In a real app, this would load face-api.js models
+    // await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+    // await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+    // await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
     
-    if (isInIframe) {
-      console.log('Running in iframe, using simulated authentication');
-      return simulatedBiometricAuth();
-    }
-    
-    const challenge = generateChallenge();
-    
-    // This is a simplified implementation that uses the platform authenticator
-    const credential = await navigator.credentials.get({
-      publicKey: {
-        challenge,
-        rpId: window.location.hostname,
-        allowCredentials: [], // Empty to allow any registered credential
-        userVerification: 'required' // Explicitly require user verification (face ID)
-      }
-    });
-
-    // In a real app, you would send the credential to your server for verification
-    // For our mock implementation, we'll consider the authentication successful if we get here
-    return !!credential;
+    // For simulation, we'll just return true after a delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return true;
   } catch (error) {
-    console.error('Face authentication error:', error);
-    
-    // If we get a "NotAllowedError" with a specific message about publickey-credentials-get
-    // feature not being enabled, it's likely we're in an iframe or restricted environment
-    if (error instanceof Error && 
-        error.name === 'NotAllowedError' && 
-        error.message.includes('publickey-credentials-get')) {
-      console.log('WebAuthn API restricted in this context, falling back to simulation');
-      return simulatedBiometricAuth();
-    }
-    
+    console.error("Error loading face detection models:", error);
     return false;
   }
 };
 
-// Simulated biometric authentication for development/demo purposes
-const simulatedBiometricAuth = (): Promise<boolean> => {
-  return new Promise((resolve) => {
-    // Simulate verification process with high success rate
-    setTimeout(() => {
-      // 95% success rate for simulation
-      const success = Math.random() < 0.95;
-      console.log(`Simulated face verification ${success ? 'succeeded' : 'failed'}`);
-      resolve(success);
-    }, 1000);
-  });
+/**
+ * Detect faces in an image (in a real app)
+ */
+export const detectFaces = async (videoEl: HTMLVideoElement): Promise<boolean> => {
+  try {
+    // In a real app, this would use face-api.js to detect faces
+    // const detections = await faceapi.detectAllFaces(
+    //   videoEl,
+    //   new faceapi.TinyFaceDetectorOptions()
+    // ).withFaceLandmarks().withFaceDescriptors();
+    
+    // return detections.length > 0;
+    
+    // For simulation, we'll just return true after a delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    return true;
+  } catch (error) {
+    console.error("Error detecting faces:", error);
+    return false;
+  }
+};
+
+/**
+ * Compare face with stored descriptors (in a real app)
+ */
+export const compareFaceDescriptors = async (
+  faceDescriptor: Float32Array,
+  storedDescriptors: Float32Array[]
+): Promise<boolean> => {
+  try {
+    // In a real app, this would compare face descriptors using face-api.js
+    // const matches = storedDescriptors.map(desc => 
+    //   faceapi.euclideanDistance(desc, faceDescriptor)
+    // );
+    
+    // const bestMatch = Math.min(...matches);
+    // return bestMatch < 0.6; // Threshold for a match
+    
+    // For simulation, we'll just return true after a delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return true;
+  } catch (error) {
+    console.error("Error comparing face descriptors:", error);
+    return false;
+  }
 };

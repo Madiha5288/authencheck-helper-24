@@ -9,9 +9,21 @@ export interface User {
   position: string;
   registeredOn: Date;
   lastLogin: Date;
-  profileImage: string;
+  profileImage?: string;
   hasFaceRegistered: boolean;
   schedule?: WeeklySchedule;
+}
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: User | null;
+  loading: boolean;
+  error: string | null;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
 }
 
 export interface AttendanceRecord {
@@ -21,8 +33,8 @@ export interface AttendanceRecord {
   date: Date;
   checkInTime: Date;
   checkOutTime: Date;
-  verificationMethod: 'face';
-  status: 'on-time' | 'late' | 'absent';
+  status: 'on-time' | 'late';
+  verificationMethod: 'face' | 'fingerprint';
 }
 
 export interface WorkDay {
@@ -39,21 +51,4 @@ export interface WeeklySchedule {
   friday: WorkDay;
   saturday: WorkDay;
   sunday: WorkDay;
-}
-
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface AuthState {
-  isAuthenticated: boolean;
-  user: User | null;
-  loading: boolean;
-  error: string | null;
-}
-
-export interface VerificationMethod {
-  type: 'face';
-  status: 'not-registered' | 'registered' | 'in-progress' | 'success' | 'failure';
 }
