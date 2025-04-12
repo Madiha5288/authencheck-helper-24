@@ -8,6 +8,7 @@
 export const isBiometricSupported = async (): Promise<boolean> => {
   // In a real app, this would check for webcam/fingerprint reader availability
   // For this simulation, we'll return true to show our simulated camera UI
+  console.log("Using simulated biometric authentication");
   return true;
 };
 
@@ -18,6 +19,7 @@ export const requestBiometricAuth = async (): Promise<boolean> => {
   try {
     // In a real application, this would trigger native biometric auth
     // For simulation, we'll just return true after a delay (high success rate)
+    console.log("Simulating biometric authentication process");
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     // 95% success rate for simulation
@@ -33,11 +35,13 @@ export const requestBiometricAuth = async (): Promise<boolean> => {
  */
 export const requestCameraAccess = async (): Promise<MediaStream | null> => {
   try {
+    console.log("Simulating camera access request");
     // In a real application, this would actually request camera access
     // const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     // return stream;
     
-    // For simulation, we'll just return null
+    // For simulation, we'll just return null after a short delay
+    await new Promise(resolve => setTimeout(resolve, 500));
     return null;
   } catch (error) {
     console.error("Error accessing camera:", error);
@@ -50,6 +54,7 @@ export const requestCameraAccess = async (): Promise<MediaStream | null> => {
  */
 export const loadFaceDetectionModels = async (): Promise<boolean> => {
   try {
+    console.log("Simulating loading face detection models");
     // In a real app, this would load face-api.js models
     // await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
     // await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
@@ -69,6 +74,7 @@ export const loadFaceDetectionModels = async (): Promise<boolean> => {
  */
 export const detectFaces = async (videoEl: HTMLVideoElement): Promise<boolean> => {
   try {
+    console.log("Simulating face detection");
     // In a real app, this would use face-api.js to detect faces
     // const detections = await faceapi.detectAllFaces(
     //   videoEl,
@@ -94,6 +100,7 @@ export const compareFaceDescriptors = async (
   storedDescriptors: Float32Array[]
 ): Promise<boolean> => {
   try {
+    console.log("Simulating face descriptor comparison");
     // In a real app, this would compare face descriptors using face-api.js
     // const matches = storedDescriptors.map(desc => 
     //   faceapi.euclideanDistance(desc, faceDescriptor)

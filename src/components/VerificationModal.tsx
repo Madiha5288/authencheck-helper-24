@@ -29,7 +29,7 @@ const VerificationModal = ({
   const [accessGranted, setAccessGranted] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [isNativeBiometrics, setIsNativeBiometrics] = useState(false);
-  const [isSimulated, setIsSimulated] = useState(false);
+  const [isSimulated, setIsSimulated] = useState(true); // Always use simulation for demo
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -46,39 +46,18 @@ const VerificationModal = ({
   }, []);
 
   const requestCameraAccess = async () => {
-    // Skip camera access if we're using simulation
-    if (isSimulated) {
-      setAccessGranted(true);
-      return true;
-    }
+    console.log("Requesting camera access (simulated)");
     
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: {
-          width: { ideal: 320 },
-          height: { ideal: 240 },
-          facingMode: "user"
-        },
-        audio: false
-      });
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        mediaStreamRef.current = stream;
-      }
-      
-      setAccessGranted(true);
-      toast.success("Camera access granted");
-      return true;
-    } catch (error) {
-      console.error("Error accessing camera:", error);
-      toast.error("Camera access denied. Please allow camera access to continue.");
-      return false;
-    }
+    // Always use simulation in this demo
+    setAccessGranted(true);
+    return true;
   };
 
   const captureFaceImage = () => {
-    if (isSimulated) return true;
+    if (isSimulated) {
+      console.log("Capturing simulated face image");
+      return true;
+    }
     
     if (canvasRef.current && videoRef.current) {
       const context = canvasRef.current.getContext('2d');
@@ -94,6 +73,7 @@ const VerificationModal = ({
 
   const startVerification = async () => {
     setStatus("in-progress");
+    console.log("Starting face verification process");
     
     try {
       // For simulation, always return true without capturing face
@@ -103,6 +83,7 @@ const VerificationModal = ({
         
       if (result) {
         setStatus("success");
+        console.log("Face verification successful");
         setTimeout(() => {
           onSuccess();
           toast.success("Face verification successful");
@@ -113,6 +94,7 @@ const VerificationModal = ({
         }, 1000);
       } else {
         setStatus("failure");
+        console.log("Face verification failed");
         toast.error("Face verification failed");
       }
     } catch (error) {
@@ -126,6 +108,7 @@ const VerificationModal = ({
     const requestAccess = async () => {
       if (!accessRequested) {
         setAccessRequested(true);
+        console.log("Starting verification process");
         
         // Always set to true for simulation
         setAccessGranted(true);
@@ -228,6 +211,12 @@ const VerificationModal = ({
               Retry
             </button>
           )}
+        </div>
+
+        {/* Hidden video element for camera capture (not used in simulation) */}
+        <div className="hidden">
+          <video ref={videoRef} autoPlay playsInline muted />
+          <canvas ref={canvasRef} />
         </div>
       </div>
     </div>

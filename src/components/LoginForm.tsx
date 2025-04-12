@@ -31,6 +31,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
 
     try {
       const userData = await authenticateUser(formData);
+      console.log("Authentication successful, user data:", userData);
       
       // Check if user has face ID registered
       if (!canUserLogIn(userData)) {
@@ -41,6 +42,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
       
       // Set the current user and show verification
       setCurrentUser(userData);
+      console.log("Showing face verification modal");
       setShowVerification(true);
       setIsLoading(false);
     } catch (error) {
@@ -51,6 +53,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
   };
 
   const handleVerificationSuccess = () => {
+    console.log("Face verification successful, completing login");
     if (currentUser) {
       saveAuthToStorage(currentUser);
       onSuccess(currentUser);
@@ -59,6 +62,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
   };
 
   const handleVerificationCancel = () => {
+    console.log("Face verification cancelled");
     setShowVerification(false);
     setCurrentUser(null);
   };
