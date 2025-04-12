@@ -54,7 +54,7 @@ const Register = ({ authState, setAuthState }: RegisterProps) => {
       localStorage.setItem('isAuthenticated', 'true');
       
       toast.success('Registration complete! You are now logged in');
-      navigate('/users');
+      navigate('/dashboard');
     }
   };
 

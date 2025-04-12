@@ -23,7 +23,7 @@ const Login = ({ authState, setAuthState }: LoginProps) => {
   // Auto-redirect to dashboard if already authenticated
   useEffect(() => {
     if (authState.isAuthenticated) {
-      navigate('/users');
+      navigate('/dashboard');
     }
   }, [authState.isAuthenticated, navigate]);
 
@@ -95,8 +95,8 @@ const Login = ({ authState, setAuthState }: LoginProps) => {
     localStorage.setItem('authUser', JSON.stringify(user));
     localStorage.setItem('isAuthenticated', 'true');
     
-    // Navigate to users page instead of dashboard
-    navigate('/users');
+    // Navigate to dashboard page instead of users
+    navigate('/dashboard');
   };
 
   return (
