@@ -1,15 +1,13 @@
 
-// This is a simulation of biometric authentication
+// This file implements biometric authentication using WebRTC
 // In a real app, this would integrate with face-api.js or a similar library
 
 /**
  * Check if the device supports biometric authentication
  */
 export const isBiometricSupported = async (): Promise<boolean> => {
-  // In a real app, this would check for webcam/fingerprint reader availability
-  // For this simulation, we'll return true to show our simulated camera UI
-  console.log("Using simulated biometric authentication");
-  return true;
+  // Check if the browser supports getUserMedia (WebRTC)
+  return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 };
 
 /**
@@ -31,20 +29,24 @@ export const requestBiometricAuth = async (): Promise<boolean> => {
 };
 
 /**
- * Request access to the camera (in a real app)
+ * Request access to the camera using WebRTC
  */
 export const requestCameraAccess = async (): Promise<MediaStream | null> => {
   try {
-    console.log("Simulating camera access request");
-    // In a real application, this would actually request camera access
-    // const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    // return stream;
-    
-    // For simulation, we'll just return null after a short delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return null;
+    console.log("Requesting real camera access via WebRTC");
+    // Actual camera access using WebRTC
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      video: { 
+        width: { ideal: 640 },
+        height: { ideal: 480 },
+        facingMode: "user" // Front camera
+      } 
+    });
+    console.log("Camera access granted:", stream.id);
+    return stream;
   } catch (error) {
     console.error("Error accessing camera:", error);
+    // If there's an error (no permission, no camera), return null
     return null;
   }
 };

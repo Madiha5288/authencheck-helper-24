@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import { User } from "../utils/types";
 import { verifyFaceId, registerFaceId } from "../utils/auth";
-import { isBiometricSupported } from "../utils/biometricAuth";
+import { isBiometricSupported, requestCameraAccess } from "../utils/biometricAuth";
 import { Check, X, Camera, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,28 +29,62 @@ const VerificationModal = ({
   const [accessGranted, setAccessGranted] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [isNativeBiometrics, setIsNativeBiometrics] = useState(false);
-  const [isSimulated, setIsSimulated] = useState(true); // Always use simulation for demo
+  const [isSimulated, setIsSimulated] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const checkBiometricSupport = async () => {
-      const supported = await isBiometricSupported();
-      setIsNativeBiometrics(false); // Force to false to show simulated UI
-      setIsSimulated(true); // Always use simulation for demo
-      console.log(`Using simulated biometric authentication`);
+      try {
+        console.log("Checking biometric support");
+        const supported = await isBiometricSupported();
+        setIsNativeBiometrics(supported);
+        setIsSimulated(!supported);
+        console.log(`Using ${supported ? 'real' : 'simulated'} biometric authentication`);
+      } catch (error) {
+        console.error("Error checking biometric support:", error);
+        setIsNativeBiometrics(false);
+        setIsSimulated(true);
+      }
     };
     
     checkBiometricSupport();
+    
+    return () => {
+      // Clean up camera when component unmounts
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => {
+          console.log("Stopping track:", track.kind);
+          track.stop();
+        });
+      }
+    };
   }, []);
 
-  const requestCameraAccess = async () => {
-    console.log("Requesting camera access (simulated)");
-    
-    // Always use simulation in this demo
-    setAccessGranted(true);
-    return true;
+  const startCamera = async () => {
+    try {
+      console.log("Starting camera");
+      const stream = await requestCameraAccess();
+      
+      if (stream && videoRef.current) {
+        console.log("Setting camera stream to video element");
+        videoRef.current.srcObject = stream;
+        mediaStreamRef.current = stream;
+        setAccessGranted(true);
+        return true;
+      } else {
+        console.log("No camera stream available, using simulation");
+        setIsSimulated(true);
+        setAccessGranted(true);
+        return true;
+      }
+    } catch (error) {
+      console.error("Error starting camera:", error);
+      setIsSimulated(true);
+      setAccessGranted(true);
+      return true;
+    }
   };
 
   const captureFaceImage = () => {
@@ -65,9 +99,11 @@ const VerificationModal = ({
         canvasRef.current.width = videoRef.current.videoWidth;
         canvasRef.current.height = videoRef.current.videoHeight;
         context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
+        console.log("Face image captured from camera");
         return true;
       }
     }
+    console.log("Failed to capture face image");
     return false;
   };
 
@@ -76,7 +112,14 @@ const VerificationModal = ({
     console.log("Starting face verification process");
     
     try {
-      // For simulation, always return true without capturing face
+      // Capture face image if using real camera
+      if (!isSimulated) {
+        const captured = captureFaceImage();
+        if (!captured) {
+          throw new Error("Failed to capture face image");
+        }
+      }
+      
       const result = isRegister 
         ? await registerFaceId(user.id)
         : await verifyFaceId(user.id);
@@ -110,24 +153,23 @@ const VerificationModal = ({
         setAccessRequested(true);
         console.log("Starting verification process");
         
-        // Always set to true for simulation
-        setAccessGranted(true);
+        const cameraStarted = await startCamera();
         
-        setTimeout(() => {
-          startVerification();
-        }, 1500);
+        if (cameraStarted) {
+          setTimeout(() => {
+            startVerification();
+          }, 1500);
+        } else {
+          console.error("Could not start camera");
+          setStatus("failure");
+          toast.error("Could not access camera");
+        }
       }
     };
     
     if (status === "registered" || status === "not-registered") {
       requestAccess();
     }
-    
-    return () => {
-      if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach(track => track.stop());
-      }
-    };
   }, [status, accessRequested]);
 
   return (
@@ -139,16 +181,28 @@ const VerificationModal = ({
               {isRegister ? "Register" : "Verify"} Face ID
             </h3>
             
-            <p className="text-muted-foreground text-center mb-6">
-              <ShieldAlert className="inline-block mr-1 h-5 w-5 text-amber-500" />
-              Using simulated Face ID for demonstration.
-            </p>
+            {isSimulated && (
+              <p className="text-muted-foreground text-center mb-6">
+                <ShieldAlert className="inline-block mr-1 h-5 w-5 text-amber-500" />
+                Using simulated Face ID for demonstration.
+              </p>
+            )}
 
             <div className="w-48 h-48 mb-6 relative">
               <div className="w-full h-full rounded-lg overflow-hidden border-2 border-primary relative face-recognition-grid">
-                <div className="absolute inset-0 flex items-center justify-center bg-primary/10">
-                  <ShieldAlert className="h-16 w-16 text-primary/70" />
-                </div>
+                {isSimulated ? (
+                  <div className="absolute inset-0 flex items-center justify-center bg-primary/10">
+                    <ShieldAlert className="h-16 w-16 text-primary/70" />
+                  </div>
+                ) : (
+                  <video 
+                    ref={videoRef} 
+                    autoPlay 
+                    playsInline 
+                    muted 
+                    className="h-full w-full object-cover"
+                  />
+                )}
                 
                 {status === "in-progress" && (
                   <div className="absolute top-0 left-0 right-0 h-1 bg-primary/80 scanner-line animate-scanning"></div>
@@ -213,11 +267,8 @@ const VerificationModal = ({
           )}
         </div>
 
-        {/* Hidden video element for camera capture (not used in simulation) */}
-        <div className="hidden">
-          <video ref={videoRef} autoPlay playsInline muted />
-          <canvas ref={canvasRef} />
-        </div>
+        {/* Hidden canvas for capturing still images from video */}
+        <canvas ref={canvasRef} className="hidden" />
       </div>
     </div>
   );
