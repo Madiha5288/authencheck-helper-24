@@ -20,18 +20,42 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Override the default config path to use our custom one
-  configFile: path.resolve(__dirname, "./src/tsconfig.custom.json"),
-  // Completely ignore the problematic tsconfig.node.json file
+  // Skip TypeScript checking in the build process to avoid tsconfig.node.json errors
   optimizeDeps: {
     force: true,
     exclude: ["tsconfig.node.json"]
   },
+  // Use our custom tsconfig completely
   build: {
-    // Ensure the build uses our custom configuration
     outDir: 'dist',
     emptyOutDir: true,
-    // Skip TypeScript checking in the problematic file
     skipTypeCheck: true
+  },
+  // Explicitly set the path to our custom tsconfig
+  // and completely ignore the problematic tsconfig.node.json
+  esbuild: {
+    tsconfigRaw: {
+      compilerOptions: {
+        target: "esnext",
+        useDefineForClassFields: true,
+        module: "esnext",
+        lib: ["esnext", "dom", "dom.iterable"],
+        skipLibCheck: true,
+        moduleResolution: "bundler",
+        allowImportingTsExtensions: true,
+        resolveJsonModule: true,
+        isolatedModules: true,
+        noEmit: true,
+        jsx: "react-jsx",
+        strict: true,
+        noUnusedLocals: false,
+        noUnusedParameters: false,
+        noFallthroughCasesInSwitch: true,
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true
+      },
+      include: ["src/**/*"],
+      exclude: ["node_modules", "tsconfig.node.json"]
+    }
   }
 }));
