@@ -37,17 +37,17 @@ const VerificationModal = ({
   useEffect(() => {
     const checkBiometricSupport = async () => {
       const supported = await isBiometricSupported();
-      setIsNativeBiometrics(supported);
-      setIsSimulated(!supported);
-      console.log(`Native biometric authentication ${supported ? 'is' : 'is not'} supported`);
+      setIsNativeBiometrics(false); // Force to false to show simulated UI
+      setIsSimulated(true); // Always use simulation for demo
+      console.log(`Using simulated biometric authentication`);
     };
     
     checkBiometricSupport();
   }, []);
 
   const requestCameraAccess = async () => {
-    // Skip camera access if we're using native biometrics or simulation
-    if (isNativeBiometrics || isSimulated) {
+    // Skip camera access if we're using simulation
+    if (isSimulated) {
       setAccessGranted(true);
       return true;
     }
@@ -78,7 +78,7 @@ const VerificationModal = ({
   };
 
   const captureFaceImage = () => {
-    if (isNativeBiometrics || isSimulated) return true;
+    if (isSimulated) return true;
     
     if (canvasRef.current && videoRef.current) {
       const context = canvasRef.current.getContext('2d');
@@ -96,10 +96,7 @@ const VerificationModal = ({
     setStatus("in-progress");
     
     try {
-      if (!isNativeBiometrics && !isSimulated && !captureFaceImage()) {
-        throw new Error("Failed to capture face image");
-      }
-      
+      // For simulation, always return true without capturing face
       const result = isRegister 
         ? await registerFaceId(user.id)
         : await verifyFaceId(user.id);
@@ -130,15 +127,12 @@ const VerificationModal = ({
       if (!accessRequested) {
         setAccessRequested(true);
         
-        let accessSuccess = await requestCameraAccess();
+        // Always set to true for simulation
+        setAccessGranted(true);
         
-        if (accessSuccess) {
-          setTimeout(() => {
-            startVerification();
-          }, 1500);
-        } else {
-          setStatus("failure");
-        }
+        setTimeout(() => {
+          startVerification();
+        }, 1500);
       }
     };
     
@@ -161,49 +155,17 @@ const VerificationModal = ({
             <h3 className="text-xl font-semibold mb-2">
               {isRegister ? "Register" : "Verify"} Face ID
             </h3>
-            {isNativeBiometrics ? (
-              <p className="text-muted-foreground text-center mb-6">
-                <ShieldAlert className="inline-block mr-1 h-5 w-5 text-amber-500" />
-                Native biometric authentication will be used.
-                {isRegister ? " Please follow the prompts to register your Face ID." : " Please verify with your Face ID when prompted."}
-              </p>
-            ) : isSimulated ? (
-              <p className="text-muted-foreground text-center mb-6">
-                <ShieldAlert className="inline-block mr-1 h-5 w-5 text-amber-500" />
-                Using simulated Face ID for demonstration.
-              </p>
-            ) : (
-              <p className="text-muted-foreground text-center mb-6">
-                {isRegister
-                  ? "Please allow camera access to register your Face ID."
-                  : "Please look at the camera for Face ID verification."}
-              </p>
-            )}
+            
+            <p className="text-muted-foreground text-center mb-6">
+              <ShieldAlert className="inline-block mr-1 h-5 w-5 text-amber-500" />
+              Using simulated Face ID for demonstration.
+            </p>
 
             <div className="w-48 h-48 mb-6 relative">
               <div className="w-full h-full rounded-lg overflow-hidden border-2 border-primary relative face-recognition-grid">
-                {!isNativeBiometrics && !isSimulated && (
-                  <video 
-                    ref={videoRef}
-                    className="w-full h-full object-cover"
-                    autoPlay 
-                    muted 
-                    playsInline
-                  />
-                )}
-                
-                {!isNativeBiometrics && !isSimulated && (
-                  <canvas 
-                    ref={canvasRef} 
-                    className="hidden" 
-                  />
-                )}
-                
-                {(isNativeBiometrics || isSimulated) && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-primary/10">
-                    <ShieldAlert className="h-16 w-16 text-primary/70" />
-                  </div>
-                )}
+                <div className="absolute inset-0 flex items-center justify-center bg-primary/10">
+                  <ShieldAlert className="h-16 w-16 text-primary/70" />
+                </div>
                 
                 {status === "in-progress" && (
                   <div className="absolute top-0 left-0 right-0 h-1 bg-primary/80 scanner-line animate-scanning"></div>
@@ -218,21 +180,11 @@ const VerificationModal = ({
                     <X className="h-16 w-16 text-destructive" />
                   </div>
                 )}
-                {!accessGranted && status !== "failure" && status !== "success" && !isNativeBiometrics && !isSimulated && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Camera className="h-16 w-16 text-primary/50 animate-pulse-light" />
-                  </div>
-                )}
               </div>
             </div>
 
             <div className="text-center">
-              {!accessGranted && status !== "failure" && status !== "success" && !isNativeBiometrics && !isSimulated && (
-                <p className="text-sm">
-                  Requesting camera access...
-                </p>
-              )}
-              {(accessGranted || isNativeBiometrics || isSimulated) && status === "in-progress" && (
+              {status === "in-progress" && (
                 <p className="text-sm">
                   {isRegister ? "Registering" : "Verifying"} Face ID...
                 </p>
@@ -244,9 +196,7 @@ const VerificationModal = ({
               )}
               {status === "failure" && (
                 <p className="text-sm text-destructive">
-                  {!accessGranted && !isNativeBiometrics && !isSimulated
-                    ? "Camera access denied" 
-                    : `${isRegister ? "Face ID registration" : "Face ID verification"} failed!`}
+                  {`${isRegister ? "Face ID registration" : "Face ID verification"} failed!`}
                   {required && " This is required to continue."}
                 </p>
               )}

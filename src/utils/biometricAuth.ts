@@ -7,8 +7,8 @@
  */
 export const isBiometricSupported = async (): Promise<boolean> => {
   // In a real app, this would check for webcam/fingerprint reader availability
-  // For this simulation, we'll return false so we can show our simulated UI
-  return false;
+  // For this simulation, we'll return true to show our simulated camera UI
+  return true;
 };
 
 /**
