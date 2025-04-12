@@ -21,5 +21,14 @@ export default defineConfig(({ mode }) => ({
     },
   },
   // Override the default config path to use our custom one
-  configFile: path.resolve(__dirname, "./src/tsconfig.custom.json")
+  configFile: path.resolve(__dirname, "./src/tsconfig.custom.json"),
+  // Add this to explicitly ignore the problematic tsconfig.node.json
+  optimizeDeps: {
+    force: true
+  },
+  build: {
+    // Also ensure the build uses our custom configuration
+    outDir: 'dist',
+    emptyOutDir: true
+  }
 }));
