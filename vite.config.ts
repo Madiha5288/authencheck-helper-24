@@ -22,16 +22,16 @@ export default defineConfig(({ mode }) => ({
   },
   // Override the default config path to use our custom one
   configFile: path.resolve(__dirname, "./src/tsconfig.custom.json"),
-  // Add this to explicitly ignore the problematic tsconfig.node.json
+  // Completely ignore the problematic tsconfig.node.json file
   optimizeDeps: {
     force: true,
     exclude: ["tsconfig.node.json"]
   },
   build: {
-    // Also ensure the build uses our custom configuration
+    // Ensure the build uses our custom configuration
     outDir: 'dist',
     emptyOutDir: true,
-    // Completely skip TypeScript checking in tsconfig.node.json
+    // Skip TypeScript checking in the problematic file
     skipTypeCheck: true
   }
 }));

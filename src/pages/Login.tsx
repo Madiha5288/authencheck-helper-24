@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthForm from '../components/AuthForm';
@@ -95,7 +96,7 @@ const Login = ({ authState, setAuthState }: LoginProps) => {
     localStorage.setItem('authUser', JSON.stringify(user));
     localStorage.setItem('isAuthenticated', 'true');
     
-    // Navigate to dashboard page instead of users
+    // Navigate to dashboard page
     navigate('/dashboard');
   };
 

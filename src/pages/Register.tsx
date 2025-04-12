@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthForm from '../components/AuthForm';
@@ -54,6 +55,7 @@ const Register = ({ authState, setAuthState }: RegisterProps) => {
       localStorage.setItem('isAuthenticated', 'true');
       
       toast.success('Registration complete! You are now logged in');
+      // Ensure we navigate to dashboard
       navigate('/dashboard');
     }
   };
