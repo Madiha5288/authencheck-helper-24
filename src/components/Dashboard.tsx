@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { User, AttendanceRecord } from '../utils/types';
 import { attendanceRecords, getAttendanceStats } from '../utils/mockData';

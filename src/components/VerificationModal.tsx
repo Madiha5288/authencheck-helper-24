@@ -34,6 +34,7 @@ const VerificationModal = ({
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Ensure we clean up camera on unmount
   useEffect(() => {
     const checkBiometricSupport = async () => {
       try {
