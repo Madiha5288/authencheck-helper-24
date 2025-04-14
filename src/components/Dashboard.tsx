@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { User, AttendanceRecord } from '../utils/types';
 import { attendanceRecords, getAttendanceStats } from '../utils/mockData';
@@ -8,7 +7,7 @@ import UserCard from './UserCard';
 import Stats from './Stats';
 import VerificationModal from './VerificationModal';
 import { format } from 'date-fns';
-import { checkInUser, checkOutUser } from '../utils/auth';
+import { checkInUser, checkOutUser, canUserLogIn } from '../utils/auth';
 
 interface DashboardProps {
   user: User;
@@ -33,15 +32,26 @@ const Dashboard = ({ user }: DashboardProps) => {
     .slice(0, showAllRecords ? undefined : 5);
   
   const hasCheckedIn = userRecordsToday.length > 0;
+  const hasCheckedOut = hasCheckedIn && userRecordsToday[0].checkOutTime !== null;
   
   const handleAttendance = (isCheckOut = false) => {
-    setIsCheckingOut(isCheckOut);
-    
-    if (user.hasFaceRegistered) {
-      setShowVerification('face');
-    } else {
+    if (!user.hasFaceRegistered) {
       toast.error('Please register your face ID first');
+      return;
     }
+    
+    if (isCheckOut && hasCheckedOut) {
+      toast.error('You have already checked out today');
+      return;
+    }
+    
+    if (!isCheckOut && hasCheckedIn) {
+      toast.error('You have already checked in today');
+      return;
+    }
+    
+    setIsCheckingOut(isCheckOut);
+    setShowVerification('face');
   };
   
   const handleVerificationSuccess = () => {
@@ -95,39 +105,17 @@ const Dashboard = ({ user }: DashboardProps) => {
                 </div>
               </div>
               
-              <div className="flex items-center space-x-3">
-                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                  <UserCheck className="h-5 w-5 text-primary" />
+              {!hasCheckedOut && (
+                <div className="pt-2 flex space-x-4">
+                  <button
+                    onClick={() => handleAttendance(true)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-red-500 text-red-500 rounded-md hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Check Out
+                  </button>
                 </div>
-                <div>
-                  <p className="font-medium">Verification Method</p>
-                  <p className="text-sm text-muted-foreground">
-                    Face Recognition
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-3">
-                <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-amber-600" />
-                </div>
-                <div>
-                  <p className="font-medium">Status</p>
-                  <p className="text-sm text-muted-foreground">
-                    {userRecordsToday[0].status === 'on-time' ? 'On Time' : 'Late'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="pt-2">
-                <button
-                  onClick={() => handleAttendance(true)}
-                  className="flex items-center justify-center w-full gap-2 px-4 py-2 border border-red-500 text-red-500 rounded-md hover:bg-red-50 transition-colors"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Check Out
-                </button>
-              </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-8">

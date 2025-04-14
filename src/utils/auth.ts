@@ -1,4 +1,3 @@
-
 import { User, LoginCredentials, AuthState, AttendanceRecord } from './types';
 import { users, attendanceRecords } from './mockData';
 import { isBiometricSupported, requestBiometricAuth } from './biometricAuth';
@@ -215,6 +214,12 @@ export const checkOutUser = (userId: string): void => {
   const existingRecord = attendanceRecords.find(record => record.id === recordId);
   if (!existingRecord) {
     console.log('No check-in record found for today');
+    return;
+  }
+  
+  // Prevent multiple check-outs
+  if (existingRecord.checkOutTime) {
+    console.log('User has already checked out today');
     return;
   }
   
