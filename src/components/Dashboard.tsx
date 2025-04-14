@@ -1,8 +1,7 @@
-
 import { useState } from 'react';
 import { User, AttendanceRecord } from '../utils/types';
 import { attendanceRecords, getAttendanceStats } from '../utils/mockData';
-import { Check, Clock, UserCheck, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, Clock, UserCheck, ChevronDown, ChevronUp, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import UserCard from './UserCard';
 import Stats from './Stats';
@@ -20,39 +19,30 @@ const Dashboard = ({ user }: DashboardProps) => {
   const [showAllRecords, setShowAllRecords] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   
-  // Get stats
   const stats = getAttendanceStats();
   
-  // Get today's records for the current user
   const today = new Date().toISOString().split('T')[0];
   const userRecordsToday = attendanceRecords.filter(
     record => record.userId === user.id && record.date.toISOString().split('T')[0] === today
   );
   
-  // Get recent records for the current user (last 5)
   const userRecords = attendanceRecords
     .filter(record => record.userId === user.id)
     .sort((a, b) => b.date.getTime() - a.date.getTime())
     .slice(0, showAllRecords ? undefined : 5);
   
-  // Check if the user has already checked in today
   const hasCheckedIn = userRecordsToday.length > 0;
   
-  // Handle check in/out
   const handleAttendance = (isCheckOut = false) => {
     setIsCheckingOut(isCheckOut);
     
-    // If user has face registered, use that
     if (user.hasFaceRegistered) {
       setShowVerification('face');
-    } 
-    // If no biometrics are registered, show an error
-    else {
+    } else {
       toast.error('Please register your face ID first');
     }
   };
   
-  // Handle successful verification
   const handleVerificationSuccess = () => {
     setShowVerification(null);
     
@@ -61,7 +51,6 @@ const Dashboard = ({ user }: DashboardProps) => {
       return;
     }
     
-    // Record the user's attendance with face recognition
     if (isCheckingOut) {
       checkOutUser(user.id);
       toast.success('Check-out recorded successfully');
@@ -73,7 +62,6 @@ const Dashboard = ({ user }: DashboardProps) => {
     setIsCheckingOut(false);
   };
   
-  // Handle biometric registration
   const handleRegisterFace = () => {
     setIsRegistering(true);
     setShowVerification('face');
@@ -84,13 +72,11 @@ const Dashboard = ({ user }: DashboardProps) => {
       <h1 className="text-2xl font-bold">Welcome, {user.name}</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* User card */}
         <UserCard 
           user={user}
           onRegisterFace={handleRegisterFace}
         />
         
-        {/* Today's attendance */}
         <div className="bg-white rounded-lg shadow border p-6 col-span-1 md:col-span-2 card-hover">
           <h3 className="text-lg font-semibold mb-4">Today's Attendance</h3>
           
@@ -132,12 +118,12 @@ const Dashboard = ({ user }: DashboardProps) => {
                 </div>
               </div>
               
-              {/* Add check-out button if already checked in */}
               <div className="pt-2">
                 <button
                   onClick={() => handleAttendance(true)}
-                  className="w-full px-4 py-2 border border-primary text-primary rounded-md hover:bg-primary/10 transition-colors"
+                  className="flex items-center justify-center w-full gap-2 px-4 py-2 border border-red-500 text-red-500 rounded-md hover:bg-red-50 transition-colors"
                 >
+                  <LogOut className="h-4 w-4" />
                   Check Out
                 </button>
               </div>
@@ -147,8 +133,9 @@ const Dashboard = ({ user }: DashboardProps) => {
               <p className="text-muted-foreground mb-4">You haven't checked in yet</p>
               <button
                 onClick={() => handleAttendance(false)}
-                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
               >
+                <Check className="h-4 w-4" />
                 Check In Now
               </button>
             </div>
@@ -156,7 +143,6 @@ const Dashboard = ({ user }: DashboardProps) => {
         </div>
       </div>
       
-      {/* Recent attendance records */}
       <div className="bg-white rounded-lg shadow border overflow-hidden card-hover">
         <div className="p-4 border-b">
           <h3 className="text-lg font-semibold">Your Recent Attendance</h3>
@@ -222,7 +208,6 @@ const Dashboard = ({ user }: DashboardProps) => {
         )}
       </div>
       
-      {/* Stats section */}
       {user.role === 'admin' && (
         <div className="border-t pt-6 mt-6">
           <h2 className="text-xl font-bold mb-4">Organization Overview</h2>
@@ -230,7 +215,6 @@ const Dashboard = ({ user }: DashboardProps) => {
         </div>
       )}
       
-      {/* Verification modal */}
       {showVerification && (
         <VerificationModal
           user={user}
